@@ -1,0 +1,71 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: iceci-operator
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - "pods/log"
+  - services
+  - endpoints
+  - persistentvolumes
+  - persistentvolumeclaims
+  - events
+  - configmaps
+  - secrets
+  verbs:
+  - '*'
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  - daemonsets
+  - replicasets
+  - statefulsets
+  verbs:
+  - '*'
+- apiGroups:
+  - batch
+  resources:
+  - cronjobs
+  verbs:
+  - '*'
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - servicemonitors
+  verbs:
+  - get
+  - create
+- apiGroups:
+  - apps
+  resourceNames:
+  - iceci-operator
+  resources:
+  - deployments/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - iceci.io
+  resources:
+  - '*'
+  - dockerbuilds
+  - gitwatchers
+  - workspacevolumes
+  - gitpipelines
+  verbs:
+  - '*'
+- apiGroups:
+  - icekube.io
+  resources:
+  - '*'
+  - tasks
+  - backingservices
+  - pipelines
+  - dockerbuilds
+  - gitclones
+  verbs:
+  - '*'

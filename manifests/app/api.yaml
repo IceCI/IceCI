@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iceci-api
+  labels:
+    name: iceci-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: iceci-api
+  template:
+    metadata:
+      labels:
+        name: iceci-api
+    spec:
+      serviceAccountName: iceci-operator
+      containers:
+      - name: iceci-api
+        image: docker.io/iceci/iceci-api:alpha1
+        imagePullPolicy: Always
+        env:
+        - name: ICECI_DB_USER
+          value: user
+        - name: ICECI_DB_HOST
+          value: iceci-postgres
+        - name: ICECI_DB_NAME
+          value: iceci
+        - name: ICECI_DB_PASS
+          value: pass
+        - name: ICECI_DB_PORT
+          value: "5432"
+        - name: ICECI_DB_DIALECT
+          value: postgres
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iceci-api
+spec:
+  selector:
+    name: iceci-api
+  type: ClusterIP
+  ports:
+  - protocol: TCP
+    name: api
+    port: 80
+    targetPort: 8000

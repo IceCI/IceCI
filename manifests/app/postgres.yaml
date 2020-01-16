@@ -1,0 +1,83 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: iceci-postgres
+spec:
+  selector:
+    matchLabels:
+      name: iceci-postgres
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: iceci-postgres
+  labels:
+    name: iceci-postgres
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: /iceci/postgres
+    type: DirectoryOrCreate
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iceci-postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: iceci-postgres
+  template:
+    metadata:
+      labels:
+        name: iceci-postgres
+    spec:
+      containers:
+      - name: iceci-postgres
+        image: postgres:11
+        ports:
+        - containerPort: 5432
+        imagePullPolicy: Always
+        env:
+        - name: OPERATOR_NAME
+          value: "iceci-postgres"
+        - name: POSTGRES_PASSWORD
+          value: pass
+        - name: POSTGRES_USER
+          value: user
+        - name: POSTGRES_DB
+          value: iceci
+        volumeMounts:
+        - mountPath: /var/lib/postgresql/data/
+          name: pgdata
+      volumes:
+      - name: pgdata
+        persistentVolumeClaim:
+          claimName: iceci-postgres
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iceci-postgres
+spec:
+  selector:
+    name: iceci-postgres
+  ports:
+  - protocol: TCP
+    name: postgres
+    port: 5432
+    targetPort: 5432
+

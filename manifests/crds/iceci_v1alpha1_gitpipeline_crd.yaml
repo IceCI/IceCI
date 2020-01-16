@@ -1,0 +1,119 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: gitpipelines.iceci.io
+spec:
+  additionalPrinterColumns:
+  - JSONPath: .status.phase
+    description: Phase
+    format: byte
+    name: phase
+    priority: 1
+    type: string
+  group: iceci.io
+  names:
+    kind: GitPipeline
+    listKind: GitPipelineList
+    plural: gitpipelines
+    singular: gitpipeline
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          properties:
+            context:
+              additionalProperties:
+                type: string
+              type: object
+            git:
+              properties:
+                auth:
+                  properties:
+                    secret:
+                      type: string
+                    type:
+                      type: string
+                  required:
+                  - type
+                  - secret
+                  type: object
+                commitSHA:
+                  type: string
+                repositoryURL:
+                  type: string
+              required:
+              - repositoryURL
+              - commitSHA
+              type: object
+          required:
+          - git
+          type: object
+        status:
+          properties:
+            checkoutMetadata:
+              properties:
+                authorEmail:
+                  type: string
+                authorName:
+                  type: string
+                commitHash:
+                  type: string
+                committerEmail:
+                  type: string
+                committerName:
+                  type: string
+                log:
+                  type: string
+              type: object
+            duration:
+              format: int32
+              type: integer
+            error:
+              properties:
+                message:
+                  type: string
+                reason:
+                  type: string
+              type: object
+            finishedTime:
+              format: date-time
+              type: string
+            initializedTime:
+              format: date-time
+              type: string
+            phase:
+              type: string
+            pipeline:
+              type: string
+            resourceNames:
+              properties:
+                gitClone:
+                  type: string
+                pipelineConfigMap:
+                  type: string
+                workspaceVolume:
+                  type: string
+              type: object
+          required:
+          - checkoutMetadata
+          type: object
+  version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
