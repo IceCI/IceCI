@@ -1,7 +1,6 @@
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
+kind: Role
 metadata:
-  creationTimestamp: null
   name: iceci-operator
 rules:
 - apiGroups:
@@ -11,7 +10,6 @@ rules:
   - "pods/log"
   - services
   - endpoints
-  - persistentvolumes
   - persistentvolumeclaims
   - events
   - configmaps
@@ -31,6 +29,7 @@ rules:
   - batch
   resources:
   - cronjobs
+  - jobs
   verbs:
   - '*'
 - apiGroups:
@@ -52,20 +51,11 @@ rules:
   - iceci.io
   resources:
   - '*'
-  - dockerbuilds
-  - gitwatchers
-  - workspacevolumes
-  - gitpipelines
   verbs:
   - '*'
 - apiGroups:
   - icekube.io
   resources:
   - '*'
-  - tasks
-  - backingservices
-  - pipelines
-  - dockerbuilds
-  - gitclones
   verbs:
   - '*'

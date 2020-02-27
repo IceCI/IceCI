@@ -15,14 +15,10 @@ spec:
       serviceAccountName: iceci-operator
       containers:
       - name: iceci-sync
-        image: docker.io/iceci/iceci-sync:alpha1
+        image: docker.io/iceci/iceci-sync:alpha2
         imagePullPolicy: Always
         env:
-        - name: WATCH_NAMESPACE
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace
-        - name: ICECI_MANAGER_NAMESPACE
+        - name: ICE_NAMESPACE
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
@@ -32,6 +28,10 @@ spec:
               fieldPath: metadata.name
         - name: OPERATOR_NAME
           value: "iceci-sync"
+        - name: ICE_DYNAMIC_PVC
+          value: dynamic-storage
+        - name: ICE_SHARED_PVC
+          value: shared-storage
         - name: ICECI_DB_USER
           value: user
         - name: ICECI_DB_HOST
