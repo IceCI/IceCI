@@ -17,9 +17,13 @@ spec:
       serviceAccountName: iceci-operator
       containers:
       - name: iceci-api
-        image: docker.io/iceci/iceci-api:alpha1
+        image: docker.io/iceci/iceci-api:alpha2
         imagePullPolicy: Always
         env:
+        - name: ICE_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
         - name: ICECI_DB_USER
           value: user
         - name: ICECI_DB_HOST
