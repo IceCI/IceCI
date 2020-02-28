@@ -18,7 +18,7 @@ kubectl create ns iceci
 kubectl config set-context --current --namespace=iceci
 ``` 
 
-### Deploy the applications
+### Deploy the IceCI and CRD
 Deploy the required custom resources and the IceCI operator itself. This is the minimum setup required to be able to run and monitor workloads using `kubectl`.
 
 ```shell script
