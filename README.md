@@ -46,3 +46,8 @@ You can add repositories from the main section in the UI. If your repository is 
 ![iceci-repository](img/iceci-repository-add.png)
 
 Your repository is now being monitored by IceCI - push some code to start running your pipelines!
+
+
+---
+
+_Keep cool - [Icetek](https://icetek.io/)_
