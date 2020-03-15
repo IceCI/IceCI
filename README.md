@@ -50,4 +50,4 @@ Your repository is now being monitored by IceCI - push some code to start runnin
 
 ---
 
-_Keep cool - [Icetek](https://icetek.io/)_
+_Kept cool &#x1f9ca; by [Icetek](https://icetek.io/)_

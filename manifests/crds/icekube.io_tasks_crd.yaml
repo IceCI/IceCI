@@ -5,12 +5,28 @@ metadata:
   name: tasks.icekube.io
 spec:
   additionalPrinterColumns:
+  - JSONPath: .metadata.creationTimestamp
+    description: Age
+    format: date-time
+    name: age
+    type: date
   - JSONPath: .status.phase
     description: Phase
     format: byte
     name: phase
+    type: string
+  - JSONPath: .status.podStatus.name
+    description: Pod name
+    format: byte
+    name: podName
     priority: 1
     type: string
+  - JSONPath: .status.podStatus.exitCode
+    description: Exit code
+    format: int32
+    name: exitCode
+    priority: 1
+    type: integer
   group: icekube.io
   names:
     kind: Task
@@ -49,10 +65,6 @@ spec:
               items:
                 type: string
               type: array
-            env:
-              additionalProperties:
-                type: string
-              type: object
             envFromSecret:
               items:
                 properties:
@@ -67,6 +79,31 @@ spec:
                     type: string
                 required:
                 - objectName
+                type: object
+              type: array
+            environment:
+              items:
+                properties:
+                  fromSecret:
+                    type: string
+                  name:
+                    type: string
+                  value:
+                    type: string
+                required:
+                - name
+                type: object
+              type: array
+            files:
+              items:
+                properties:
+                  fromSecret:
+                    type: string
+                  path:
+                    type: string
+                required:
+                - fromSecret
+                - path
                 type: object
               type: array
             hosts:
