@@ -45,10 +45,19 @@ spec:
               required:
               - secretName
               type: object
-            env:
-              additionalProperties:
-                type: string
-              type: object
+            environment:
+              items:
+                properties:
+                  fromSecret:
+                    type: string
+                  name:
+                    type: string
+                  value:
+                    type: string
+                required:
+                - name
+                type: object
+              type: array
             hosts:
               additionalProperties:
                 type: string

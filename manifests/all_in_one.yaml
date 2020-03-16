@@ -1,243 +1,4 @@
 ---
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: iceci-api
-  labels:
-    name: iceci-api
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      name: iceci-api
-  template:
-    metadata:
-      labels:
-        name: iceci-api
-    spec:
-      serviceAccountName: iceci-operator
-      containers:
-      - name: iceci-api
-        image: docker.io/iceci/iceci-api:alpha2
-        imagePullPolicy: Always
-        env:
-        - name: ICE_NAMESPACE
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace
-        - name: ICECI_DB_USER
-          value: user
-        - name: ICECI_DB_HOST
-          value: iceci-postgres
-        - name: ICECI_DB_NAME
-          value: iceci
-        - name: ICECI_DB_PASS
-          value: pass
-        - name: ICECI_DB_PORT
-          value: "5432"
-        - name: ICECI_DB_DIALECT
-          value: postgres
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: iceci-api
-spec:
-  selector:
-    name: iceci-api
-  type: ClusterIP
-  ports:
-  - protocol: TCP
-    name: api
-    port: 80
-    targetPort: 8000
----
-apiVersion: networking.k8s.io/v1beta1
-kind: Ingress
-metadata:
-  name: iceci
-spec:
-  rules:
-  #  - host: iceci.local
-  - http:
-      paths:
-      - path: /api
-        backend:
-          serviceName: iceci-api
-          servicePort: 80
-      - path: /
-        backend:
-          serviceName: iceci-ui
-          servicePort: 80
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: iceci-postgres
-spec:
-  selector:
-    matchLabels:
-      name: iceci-postgres
-  accessModes:
-  - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
-
----
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: iceci-postgres
-  labels:
-    name: iceci-postgres
-spec:
-  capacity:
-    storage: 1Gi
-  accessModes:
-  - ReadWriteOnce
-  hostPath:
-    path: /iceci/postgres
-    type: DirectoryOrCreate
-
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: iceci-postgres
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      name: iceci-postgres
-  template:
-    metadata:
-      labels:
-        name: iceci-postgres
-    spec:
-      containers:
-      - name: iceci-postgres
-        image: postgres:11
-        ports:
-        - containerPort: 5432
-        imagePullPolicy: Always
-        env:
-        - name: OPERATOR_NAME
-          value: "iceci-postgres"
-        - name: POSTGRES_PASSWORD
-          value: pass
-        - name: POSTGRES_USER
-          value: user
-        - name: POSTGRES_DB
-          value: iceci
-        volumeMounts:
-        - mountPath: /var/lib/postgresql/data/
-          name: pgdata
-      volumes:
-      - name: pgdata
-        persistentVolumeClaim:
-          claimName: iceci-postgres
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: iceci-postgres
-spec:
-  selector:
-    name: iceci-postgres
-  ports:
-  - protocol: TCP
-    name: postgres
-    port: 5432
-    targetPort: 5432
-
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: iceci-sync
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      name: iceci-sync
-  template:
-    metadata:
-      labels:
-        name: iceci-sync
-    spec:
-      serviceAccountName: iceci-operator
-      containers:
-      - name: iceci-sync
-        image: docker.io/iceci/iceci-sync:alpha2
-        imagePullPolicy: Always
-        env:
-        - name: ICE_NAMESPACE
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace
-        - name: POD_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.name
-        - name: OPERATOR_NAME
-          value: "iceci-sync"
-        - name: ICE_DYNAMIC_PVC
-          value: dynamic-storage
-        - name: ICE_SHARED_PVC
-          value: shared-storage
-        - name: ICECI_DB_USER
-          value: user
-        - name: ICECI_DB_HOST
-          value: iceci-postgres
-        - name: ICECI_DB_NAME
-          value: iceci
-        - name: ICECI_DB_PASS
-          value: pass
-        - name: ICECI_DB_PORT
-          value: "5432"
-        - name: ICECI_DB_DIALECT
-          value: postgres
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: iceci-ui
-  labels:
-    name: iceci-ui
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      name: iceci-ui
-  template:
-    metadata:
-      labels:
-        name: iceci-ui
-    spec:
-      containers:
-      - name: iceci-ui
-        image: docker.io/iceci/iceci-ui:alpha2
-        imagePullPolicy: Always
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: iceci-ui
-spec:
-  selector:
-    name: iceci-ui
-  type: ClusterIP
-  ports:
-  - protocol: TCP
-    name: ui
-    port: 80
-    targetPort: 80
-
----
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
@@ -545,10 +306,19 @@ spec:
               required:
               - secretName
               type: object
-            env:
-              additionalProperties:
-                type: string
-              type: object
+            environment:
+              items:
+                properties:
+                  fromSecret:
+                    type: string
+                  name:
+                    type: string
+                  value:
+                    type: string
+                required:
+                - name
+                type: object
+              type: array
             hosts:
               additionalProperties:
                 type: string
@@ -930,17 +700,9 @@ spec:
           properties:
             pipelineSpec:
               properties:
-                context:
-                  additionalProperties:
-                    type: string
-                  type: object
                 failureHandlers:
                   items:
                     properties:
-                      env:
-                        additionalProperties:
-                          type: string
-                        type: object
                       envFromSecret:
                         items:
                           properties:
@@ -955,6 +717,31 @@ spec:
                               type: string
                           required:
                           - objectName
+                          type: object
+                        type: array
+                      environment:
+                        items:
+                          properties:
+                            fromSecret:
+                              type: string
+                            name:
+                              type: string
+                            value:
+                              type: string
+                          required:
+                          - name
+                          type: object
+                        type: array
+                      files:
+                        items:
+                          properties:
+                            fromSecret:
+                              type: string
+                            path:
+                              type: string
+                          required:
+                          - fromSecret
+                          - path
                           type: object
                         type: array
                       image:
@@ -973,24 +760,17 @@ spec:
                   type: array
                 globals:
                   properties:
-                    env:
-                      additionalProperties:
-                        type: string
-                      type: object
-                    envFromSecret:
+                    environment:
                       items:
                         properties:
-                          envName:
-                            description: Name of environment variable
+                          fromSecret:
                             type: string
-                          objectKey:
-                            description: Key in config map or secret
+                          name:
                             type: string
-                          objectName:
-                            description: Name of config map or secret
+                          value:
                             type: string
                         required:
-                        - objectName
+                        - name
                         type: object
                       type: array
                     imagePullSecret:
@@ -1008,10 +788,6 @@ spec:
                 services:
                   items:
                     properties:
-                      env:
-                        additionalProperties:
-                          type: string
-                        type: object
                       envFromSecret:
                         items:
                           properties:
@@ -1026,6 +802,19 @@ spec:
                               type: string
                           required:
                           - objectName
+                          type: object
+                        type: array
+                      environment:
+                        items:
+                          properties:
+                            fromSecret:
+                              type: string
+                            name:
+                              type: string
+                            value:
+                              type: string
+                          required:
+                          - name
                           type: object
                         type: array
                       image:
@@ -1092,10 +881,6 @@ spec:
                         type: array
                       simpleStep:
                         properties:
-                          env:
-                            additionalProperties:
-                              type: string
-                            type: object
                           envFromSecret:
                             items:
                               properties:
@@ -1110,6 +895,31 @@ spec:
                                   type: string
                               required:
                               - objectName
+                              type: object
+                            type: array
+                          environment:
+                            items:
+                              properties:
+                                fromSecret:
+                                  type: string
+                                name:
+                                  type: string
+                                value:
+                                  type: string
+                              required:
+                              - name
+                              type: object
+                            type: array
+                          files:
+                            items:
+                              properties:
+                                fromSecret:
+                                  type: string
+                                path:
+                                  type: string
+                              required:
+                              - fromSecret
+                              - path
                               type: object
                             type: array
                           image:
@@ -1263,12 +1073,28 @@ metadata:
   name: tasks.icekube.io
 spec:
   additionalPrinterColumns:
+  - JSONPath: .metadata.creationTimestamp
+    description: Age
+    format: date-time
+    name: age
+    type: date
   - JSONPath: .status.phase
     description: Phase
     format: byte
     name: phase
+    type: string
+  - JSONPath: .status.podStatus.name
+    description: Pod name
+    format: byte
+    name: podName
     priority: 1
     type: string
+  - JSONPath: .status.podStatus.exitCode
+    description: Exit code
+    format: int32
+    name: exitCode
+    priority: 1
+    type: integer
   group: icekube.io
   names:
     kind: Task
@@ -1307,10 +1133,6 @@ spec:
               items:
                 type: string
               type: array
-            env:
-              additionalProperties:
-                type: string
-              type: object
             envFromSecret:
               items:
                 properties:
@@ -1325,6 +1147,31 @@ spec:
                     type: string
                 required:
                 - objectName
+                type: object
+              type: array
+            environment:
+              items:
+                properties:
+                  fromSecret:
+                    type: string
+                  name:
+                    type: string
+                  value:
+                    type: string
+                required:
+                - name
+                type: object
+              type: array
+            files:
+              items:
+                properties:
+                  fromSecret:
+                    type: string
+                  path:
+                    type: string
+                required:
+                - fromSecret
+                - path
                 type: object
               type: array
             hosts:
@@ -1437,19 +1284,16 @@ spec:
     description: Phase
     format: byte
     name: phase
-    priority: 1
     type: string
   - JSONPath: .status.volume.pvcName
     description: PVCName
     format: byte
     name: pvcname
-    priority: 2
     type: string
   - JSONPath: .status.volume.subPath
     description: SubPath
     format: byte
     name: subpath
-    priority: 3
     type: string
   group: icekube.io
   names:
@@ -1528,7 +1372,7 @@ spec:
       serviceAccountName: iceci-operator
       containers:
       - name: iceci-operator
-        image: docker.io/iceci/iceci-operator:alpha2
+        image: docker.io/iceci/iceci-operator:alpha3
         imagePullPolicy: Always
         env:
         - name: ICE_NAMESPACE
@@ -1719,3 +1563,242 @@ spec:
   selector:
     matchLabels:
       name: iceci-dynamic-storage
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iceci-api
+  labels:
+    name: iceci-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: iceci-api
+  template:
+    metadata:
+      labels:
+        name: iceci-api
+    spec:
+      serviceAccountName: iceci-operator
+      containers:
+      - name: iceci-api
+        image: docker.io/iceci/iceci-api:alpha3
+        imagePullPolicy: Always
+        env:
+        - name: ICE_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: ICECI_DB_USER
+          value: user
+        - name: ICECI_DB_HOST
+          value: iceci-postgres
+        - name: ICECI_DB_NAME
+          value: iceci
+        - name: ICECI_DB_PASS
+          value: pass
+        - name: ICECI_DB_PORT
+          value: "5432"
+        - name: ICECI_DB_DIALECT
+          value: postgres
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iceci-api
+spec:
+  selector:
+    name: iceci-api
+  type: ClusterIP
+  ports:
+  - protocol: TCP
+    name: api
+    port: 80
+    targetPort: 8000
+---
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: iceci
+spec:
+  rules:
+  #  - host: iceci.local
+  - http:
+      paths:
+      - path: /api
+        backend:
+          serviceName: iceci-api
+          servicePort: 80
+      - path: /
+        backend:
+          serviceName: iceci-ui
+          servicePort: 80
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: iceci-postgres
+spec:
+  selector:
+    matchLabels:
+      name: iceci-postgres
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: iceci-postgres
+  labels:
+    name: iceci-postgres
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: /iceci/postgres
+    type: DirectoryOrCreate
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iceci-postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: iceci-postgres
+  template:
+    metadata:
+      labels:
+        name: iceci-postgres
+    spec:
+      containers:
+      - name: iceci-postgres
+        image: postgres:11
+        ports:
+        - containerPort: 5432
+        imagePullPolicy: Always
+        env:
+        - name: OPERATOR_NAME
+          value: "iceci-postgres"
+        - name: POSTGRES_PASSWORD
+          value: pass
+        - name: POSTGRES_USER
+          value: user
+        - name: POSTGRES_DB
+          value: iceci
+        volumeMounts:
+        - mountPath: /var/lib/postgresql/data/
+          name: pgdata
+      volumes:
+      - name: pgdata
+        persistentVolumeClaim:
+          claimName: iceci-postgres
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iceci-postgres
+spec:
+  selector:
+    name: iceci-postgres
+  ports:
+  - protocol: TCP
+    name: postgres
+    port: 5432
+    targetPort: 5432
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iceci-sync
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: iceci-sync
+  template:
+    metadata:
+      labels:
+        name: iceci-sync
+    spec:
+      serviceAccountName: iceci-operator
+      containers:
+      - name: iceci-sync
+        image: docker.io/iceci/iceci-sync:alpha3
+        imagePullPolicy: Always
+        env:
+        - name: ICE_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: OPERATOR_NAME
+          value: "iceci-sync"
+        - name: ICE_DYNAMIC_PVC
+          value: dynamic-storage
+        - name: ICE_SHARED_PVC
+          value: shared-storage
+        - name: ICECI_DB_USER
+          value: user
+        - name: ICECI_DB_HOST
+          value: iceci-postgres
+        - name: ICECI_DB_NAME
+          value: iceci
+        - name: ICECI_DB_PASS
+          value: pass
+        - name: ICECI_DB_PORT
+          value: "5432"
+        - name: ICECI_DB_DIALECT
+          value: postgres
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iceci-ui
+  labels:
+    name: iceci-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: iceci-ui
+  template:
+    metadata:
+      labels:
+        name: iceci-ui
+    spec:
+      containers:
+      - name: iceci-ui
+        image: docker.io/iceci/iceci-ui:alpha3
+        imagePullPolicy: Always
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iceci-ui
+spec:
+  selector:
+    name: iceci-ui
+  type: ClusterIP
+  ports:
+  - protocol: TCP
+    name: ui
+    port: 80
+    targetPort: 80
+
