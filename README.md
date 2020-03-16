@@ -1,53 +1,25 @@
 # IceCI - chill out and integrate.
-  
+## About
 IceCI is a continuous integration system designed for Kubernetes from the ground up.  
 
 ![iceci](img/icecidark.png)
 
-## Running IceCI locally
-### Preparing the cluster
+## Status
 
-To run IceCI, you need a working local Kubernetes cluster - you can use [Minikube](https://minikube.sigs.k8s.io/) or [K3s](https://k3s.io/). Follow the installation instructions of the cluster of your choice.
+This project is currently in early alpha stage and we're eager to hear your feedback. If you have any suggestions - please drop us a line at iceci@icetek.io.
 
-### Prepare the cluster
+For more information visit [iceci.io](https://iceci.io/) or check out the [docs](https://docs.iceci.io/).
 
-Create an `iceci` namespace and update your `kubectl` config to use it. This will be the namespace that IceCI will be operating and creating all its objects in. This step is recommended, although it's not required.
+## FAQ
 
-```shell script
-kubectl create ns iceci
-kubectl config set-context --current --namespace=iceci
-``` 
+_Q: Where can I find the source code?_
 
-### Deploy IceCI
-Deploy the required custom resources and the IceCI operator itself. This is the minimum setup required to be able to run and monitor workloads using `kubectl`.
+A: The project is in early alpha and is undergoing constant changes. We're still working on building a vision for the product - we're planning on opensourcing all (or most) of it once it's stabilized.
 
-```shell script
-kubectl apply -f manifests/crds
-kubectl apply -f manifests/operator
-```
+_Q: Will IceCI remain free?_
 
-An additional set of independently deployed applications allows for persisting data and configuring the workloads using a web-based UI. Those applications include the API, UI, Sync as well as a PostgreSQL database and can be deployed by applying an additional set of Kubernetes manifests.
-
-```shell script
-kubectl apply -f manifests/app
-``` 
-
-Note - the setup assumes the ingress controller is running on your Kubernetes host. It creates an ingress rule without a *host* routing. You can change this in the *ingress* configuration.
-
-## Using IceCI
-### Secret management
-Using private Git repositories and Docker registries requires creating secrets. You can create secrets in the _Settings_ section of the UI. A proper secret type must be selected so it can be used in your pipelines
-
-![iceci-secret](img/iceci-secret.png)
-
-### Repository management
-You can add repositories from the main section in the UI. If your repository is private, uncheck the _Public repository_ option and select the secret you want to use.
-
-![iceci-repository](img/iceci-repository-add.png)
-
-Your repository is now being monitored by IceCI - push some code to start running your pipelines!
-
+A: None of the currently available functionalities will become paid ones. We are considering introducing enterprise plugins (like LDAP integration, for example) sometime in the future, however the core of IceCI will _always_ remain free. 
 
 ---
 
-_Keep cool - [Icetek](https://icetek.io/)_
+_Kept cool &#x1f9ca; by [Icetek](https://icetek.io/)_

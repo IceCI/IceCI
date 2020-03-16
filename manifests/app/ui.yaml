@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: iceci-ui
-        image: docker.io/iceci/iceci-ui:alpha2
+        image: docker.io/iceci/iceci-ui:alpha3
         imagePullPolicy: Always
 
 ---

@@ -9,19 +9,16 @@ spec:
     description: Phase
     format: byte
     name: phase
-    priority: 1
     type: string
   - JSONPath: .status.volume.pvcName
     description: PVCName
     format: byte
     name: pvcname
-    priority: 2
     type: string
   - JSONPath: .status.volume.subPath
     description: SubPath
     format: byte
     name: subpath
-    priority: 3
     type: string
   group: icekube.io
   names:

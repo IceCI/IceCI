@@ -58,17 +58,9 @@ spec:
           properties:
             pipelineSpec:
               properties:
-                context:
-                  additionalProperties:
-                    type: string
-                  type: object
                 failureHandlers:
                   items:
                     properties:
-                      env:
-                        additionalProperties:
-                          type: string
-                        type: object
                       envFromSecret:
                         items:
                           properties:
@@ -83,6 +75,31 @@ spec:
                               type: string
                           required:
                           - objectName
+                          type: object
+                        type: array
+                      environment:
+                        items:
+                          properties:
+                            fromSecret:
+                              type: string
+                            name:
+                              type: string
+                            value:
+                              type: string
+                          required:
+                          - name
+                          type: object
+                        type: array
+                      files:
+                        items:
+                          properties:
+                            fromSecret:
+                              type: string
+                            path:
+                              type: string
+                          required:
+                          - fromSecret
+                          - path
                           type: object
                         type: array
                       image:
@@ -101,24 +118,17 @@ spec:
                   type: array
                 globals:
                   properties:
-                    env:
-                      additionalProperties:
-                        type: string
-                      type: object
-                    envFromSecret:
+                    environment:
                       items:
                         properties:
-                          envName:
-                            description: Name of environment variable
+                          fromSecret:
                             type: string
-                          objectKey:
-                            description: Key in config map or secret
+                          name:
                             type: string
-                          objectName:
-                            description: Name of config map or secret
+                          value:
                             type: string
                         required:
-                        - objectName
+                        - name
                         type: object
                       type: array
                     imagePullSecret:
@@ -136,10 +146,6 @@ spec:
                 services:
                   items:
                     properties:
-                      env:
-                        additionalProperties:
-                          type: string
-                        type: object
                       envFromSecret:
                         items:
                           properties:
@@ -154,6 +160,19 @@ spec:
                               type: string
                           required:
                           - objectName
+                          type: object
+                        type: array
+                      environment:
+                        items:
+                          properties:
+                            fromSecret:
+                              type: string
+                            name:
+                              type: string
+                            value:
+                              type: string
+                          required:
+                          - name
                           type: object
                         type: array
                       image:
@@ -220,10 +239,6 @@ spec:
                         type: array
                       simpleStep:
                         properties:
-                          env:
-                            additionalProperties:
-                              type: string
-                            type: object
                           envFromSecret:
                             items:
                               properties:
@@ -238,6 +253,31 @@ spec:
                                   type: string
                               required:
                               - objectName
+                              type: object
+                            type: array
+                          environment:
+                            items:
+                              properties:
+                                fromSecret:
+                                  type: string
+                                name:
+                                  type: string
+                                value:
+                                  type: string
+                              required:
+                              - name
+                              type: object
+                            type: array
+                          files:
+                            items:
+                              properties:
+                                fromSecret:
+                                  type: string
+                                path:
+                                  type: string
+                              required:
+                              - fromSecret
+                              - path
                               type: object
                             type: array
                           image:
