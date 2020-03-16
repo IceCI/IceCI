@@ -6,17 +6,19 @@ IceCI is a continuous integration system designed for Kubernetes from the ground
 
 ## Status
 
-This project is in early alpha stage. We are eager to hear your feedback. Drop us a line at iceci@icetek.io.
+This project is currently in early alpha stage and we're eager to hear your feedback. If you have any suggestions - please drop us a line at iceci@icetek.io.
 
-For more information visit [iceci.io](https://iceci.io/) or check out [docs](https://docs.iceci.io/).
+For more information visit [iceci.io](https://iceci.io/) or check out the [docs](https://docs.iceci.io/).
 
 ## FAQ
 
-Q: Where is the source code?
-A: The project is in early alpha and changed constantly. We are working on building a vision for the product, but when it will stabilize we are planning to open source all or most of it. 
+_Q: Where can I find the source code?_
 
-Q: Will it be paid in future?
-A: No functionality that is now available will be paid. We are thinking of commercial plugins for enterprises with things like LDAP integration however core of the product will be always free. 
+A: The project is in early alpha and is undergoing constant changes. We're still working on building a vision for the product - we're planning on opensourcing all (or most) of it once it's stabilized.
+
+_Q: Will IceCI remain free?_
+
+A: None of the currently available functionalities will become paid ones. We are considering introducing enterprise plugins (like LDAP integration, for example) sometime in the future, however the core of IceCI will _always_ remain free. 
 
 ---
 
