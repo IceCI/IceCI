@@ -16,7 +16,7 @@ spec:
       serviceAccountName: iceci-operator
       containers:
       - name: iceci-sync
-        image: docker.io/iceci/iceci-sync:alpha3
+        image: docker.io/iceci/iceci-sync:alpha4
         imagePullPolicy: Always
         env:
         - name: ICE_NAMESPACE
