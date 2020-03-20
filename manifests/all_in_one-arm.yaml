@@ -1394,7 +1394,7 @@ spec:
         - name: ICE_IMAGE_UTILS
           value: "iceci/utils-arm:2"
         - name: ICE_IMAGE_BUILDKIT
-          value: "moby/buildkit:v0.6.4-rootless"
+          value: "moby/buildkit:master-rootless"
 ---
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1

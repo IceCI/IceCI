@@ -33,3 +33,9 @@ spec:
           value: iceci-dynamic-storage
         - name: ICE_SHARED_PVC
           value: iceci-shared-storage
+        - name: ICE_IMAGE_KANIKO
+          value: "gcr.io/kaniko-project/executor:v0.16.0"
+        - name: ICE_IMAGE_UTILS
+          value: "iceci/utils:2"
+        - name: ICE_IMAGE_BUILDKIT
+          value: "moby/buildkit:v0.6.4-rootless"
