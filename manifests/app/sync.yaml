@@ -16,7 +16,7 @@ spec:
       serviceAccountName: iceci-operator
       containers:
       - name: iceci-sync
-        image: docker.io/iceci/iceci-sync:alpha3
+        image: docker.io/iceci/iceci-sync:alpha4
         imagePullPolicy: Always
         env:
         - name: ICE_NAMESPACE
@@ -45,3 +45,9 @@ spec:
           value: "5432"
         - name: ICECI_DB_DIALECT
           value: postgres
+        - name: ICE_IMAGE_KANIKO
+          value: "gcr.io/kaniko-project/executor:v0.16.0"
+        - name: ICE_IMAGE_BUILDKIT
+          value: "moby/buildkit:v0.6.4-rootless"
+        - name: ICE_IMAGE_UTILS
+          value: "iceci/utils-arm:2"

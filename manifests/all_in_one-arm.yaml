@@ -1372,7 +1372,7 @@ spec:
       serviceAccountName: iceci-operator
       containers:
       - name: iceci-operator
-        image: docker.io/iceci/iceci-operator:alpha4
+        image: docker.io/iceci/iceci-operator:alpha4-arm
         imagePullPolicy: Always
         env:
         - name: ICE_NAMESPACE
@@ -1390,11 +1390,11 @@ spec:
         - name: ICE_SHARED_PVC
           value: iceci-shared-storage
         - name: ICE_IMAGE_KANIKO
-          value: "gcr.io/kaniko-project/executor:v0.16.0"
+          value: "iceci/kaniko-arm:0.19.0"
         - name: ICE_IMAGE_UTILS
-          value: "iceci/utils:2"
+          value: "iceci/utils-arm:2"
         - name: ICE_IMAGE_BUILDKIT
-          value: "moby/buildkit:v0.6.4-rootless"
+          value: "moby/buildkit:master-rootless"
 ---
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1589,7 +1589,7 @@ spec:
       serviceAccountName: iceci-operator
       containers:
       - name: iceci-api
-        image: docker.io/iceci/iceci-api:alpha4
+        image: docker.io/iceci/iceci-api:alpha4-arm
         imagePullPolicy: Always
         env:
         - name: ICE_NAMESPACE
@@ -1742,7 +1742,7 @@ spec:
       serviceAccountName: iceci-operator
       containers:
       - name: iceci-sync
-        image: docker.io/iceci/iceci-sync:alpha4
+        image: docker.io/iceci/iceci-sync:alpha4-arm
         imagePullPolicy: Always
         env:
         - name: ICE_NAMESPACE
@@ -1796,7 +1796,7 @@ spec:
     spec:
       containers:
       - name: iceci-ui
-        image: docker.io/iceci/iceci-ui:alpha4
+        image: docker.io/iceci/iceci-ui:alpha4-arm
         imagePullPolicy: Always
 
 ---
