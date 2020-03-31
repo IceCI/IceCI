@@ -1520,6 +1520,7 @@ spec:
     storage: 1Gi
   accessModes:
   - ReadWriteMany
+  storageClassName: ""
   hostPath:
     path: /iceci/shared-storage
     type: DirectoryOrCreate
@@ -1551,6 +1552,7 @@ spec:
     storage: 1Gi
   accessModes:
   - ReadWriteMany
+  storageClassName: ""
   hostPath:
     path: /iceci/dynamic-storage
     type: DirectoryOrCreate
