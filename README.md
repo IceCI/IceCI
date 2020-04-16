@@ -14,7 +14,7 @@ For more information visit [iceci.io](https://iceci.io/) or check out the [docs]
 
 _Q: Where can I find the source code?_
 
-A: The project is in early alpha and is undergoing constant changes. We're still working on building a vision for the product - we're planning on opensourcing all (or most) of it once it's stabilized.
+A: The project is in early alpha and is undergoing constant changes. We're still working on building a vision for the product - currently we're not planning on opensourcing the application code.
 
 _Q: Will IceCI remain free?_
 
@@ -22,4 +22,4 @@ A: None of the currently available functionalities will become paid ones. We are
 
 ---
 
-_Kept cool &#x1f9ca; by [Icetek](https://icetek.io/)_
+Kept cool &#x1f9ca; by [Icetek](https://icetek.io/)
