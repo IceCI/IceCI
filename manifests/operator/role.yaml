@@ -2,13 +2,12 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: iceci-operator
+  name: ice-operator
 rules:
 - apiGroups:
   - ""
   resources:
   - pods
-  - "pods/log"
   - services
   - endpoints
   - persistentvolumeclaims
@@ -27,13 +26,6 @@ rules:
   verbs:
   - '*'
 - apiGroups:
-  - batch
-  resources:
-  - cronjobs
-  - jobs
-  verbs:
-  - '*'
-- apiGroups:
   - monitoring.coreos.com
   resources:
   - servicemonitors
@@ -43,7 +35,7 @@ rules:
 - apiGroups:
   - apps
   resourceNames:
-  - iceci-operator
+  - ice-operator
   resources:
   - deployments/finalizers
   verbs:
@@ -52,11 +44,24 @@ rules:
   - iceci.io
   resources:
   - '*'
+  - runtimeprofiles
   verbs:
   - '*'
 - apiGroups:
-  - icekube.io
+  - iceai.io
   resources:
   - '*'
   verbs:
   - '*'
+- apiGroups:
+  - sdk.icetek.io
+  resources:
+  - '*'
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch

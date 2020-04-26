@@ -2,7 +2,7 @@
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
-  name: tasks.icekube.io
+  name: containerruns.iceci.io
 spec:
   additionalPrinterColumns:
   - JSONPath: .metadata.creationTimestamp
@@ -22,17 +22,17 @@ spec:
     priority: 1
     type: string
   - JSONPath: .status.podStatus.exitCode
-    description: Exit code
+    description: ExitWithError code
     format: int32
     name: exitCode
     priority: 1
     type: integer
-  group: icekube.io
+  group: iceci.io
   names:
-    kind: Task
-    listKind: TaskList
-    plural: tasks
-    singular: task
+    kind: ContainerRun
+    listKind: ContainerRunList
+    plural: containerruns
+    singular: containerrun
   scope: Namespaced
   subresources:
     status: {}
@@ -53,34 +53,8 @@ spec:
           type: object
         spec:
           properties:
-            autoLoad:
-              type: boolean
             cleanupTTL:
               type: integer
-            configMapEnv:
-              items:
-                type: string
-              type: array
-            configMapVolume:
-              items:
-                type: string
-              type: array
-            envFromSecret:
-              items:
-                properties:
-                  envName:
-                    description: Name of environment variable
-                    type: string
-                  objectKey:
-                    description: Key in config map or secret
-                    type: string
-                  objectName:
-                    description: Name of config map or secret
-                    type: string
-                required:
-                - objectName
-                type: object
-              type: array
             environment:
               items:
                 properties:
@@ -118,27 +92,10 @@ spec:
               type: string
             imagePullSecret:
               type: string
-            nodeSelector:
-              additionalProperties:
-                type: string
-              type: object
-            resourceRequest:
-              properties:
-                cpu:
-                  type: string
-                memory:
-                  type: string
-              type: object
+            runtimeProfile:
+              type: string
             script:
               type: string
-            secretEnv:
-              items:
-                type: string
-              type: array
-            secretVolume:
-              items:
-                type: string
-              type: array
             serviceAccountName:
               type: string
             volumeMounts:

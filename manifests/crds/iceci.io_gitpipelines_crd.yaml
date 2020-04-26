@@ -52,14 +52,15 @@ spec:
                   - secret
                   - type
                   type: object
-                commitSHA:
+                checkout:
                   type: string
                 repositoryURL:
                   type: string
               required:
-              - commitSHA
               - repositoryURL
               type: object
+            pipelineFilePath:
+              type: string
           required:
           - git
           type: object
