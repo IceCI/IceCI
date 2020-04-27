@@ -1644,16 +1644,21 @@ spec:
               value: "iceci/utils:2"
             - name: ICE_IMAGE_BUILDKIT
               value: "moby/buildkit:v0.6.4-rootless"
+            - name: ICE_STEP_SERVICE_ACCOUNT
+              value: "iceci-operator-step"
+            - name: ICE_DEFAULT_IMAGE_BUILDER
+              value: "kaniko"
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: ice-operator
+  name: iceci-operator
 rules:
   - apiGroups:
       - ""
     resources:
       - pods
+      - "pods/log"
       - services
       - endpoints
       - persistentvolumeclaims
@@ -1669,6 +1674,13 @@ rules:
       - daemonsets
       - replicasets
       - statefulsets
+    verbs:
+      - '*'
+  - apiGroups:
+      - batch
+    resources:
+      - cronjobs
+      - jobs
     verbs:
       - '*'
   - apiGroups:
@@ -1715,30 +1727,30 @@ rules:
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: ice-operator
+  name: iceci-operator
 subjects:
   - kind: ServiceAccount
-    name: ice-operator
+    name: iceci-operator
 roleRef:
   kind: Role
-  name: ice-operator
+  name: iceci-operator
   apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: ice-operator
+  name: iceci-operator
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: ice-operator-step
+  name: iceci-operator-step
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: ice-operator-step
+  name: iceci-operator-step
 rules:
   - apiGroups:
       - ""
@@ -1754,13 +1766,13 @@ rules:
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: ice-operator-step
+  name: iceci-operator-step
 subjects:
   - kind: ServiceAccount
-    name: ice-operator-step
+    name: iceci-operator-step
 roleRef:
   kind: Role
-  name: ice-operator-step
+  name: iceci-operator-step
   apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: v1
@@ -1774,7 +1786,6 @@ spec:
     storage: 1Gi
   accessModes:
     - ReadWriteMany
-  storageClassName: ""
   hostPath:
     path: /iceci/shared-storage
     type: DirectoryOrCreate
@@ -1806,7 +1817,6 @@ spec:
     storage: 1Gi
   accessModes:
     - ReadWriteMany
-  storageClassName: ""
   hostPath:
     path: /iceci/dynamic-storage
     type: DirectoryOrCreate

@@ -16,7 +16,7 @@ spec:
       serviceAccountName: iceci-operator
       containers:
       - name: iceci-operator
-        image: docker.io/iceci/iceci-operator:alpha4
+        image: docker.io/iceci/iceci-operator:alpha5
         imagePullPolicy: Always
         env:
         - name: ICE_NAMESPACE
@@ -39,3 +39,7 @@ spec:
           value: "iceci/utils:2"
         - name: ICE_IMAGE_BUILDKIT
           value: "moby/buildkit:v0.6.4-rootless"
+        - name: ICE_STEP_SERVICE_ACCOUNT
+          value: "iceci-operator-step"
+        - name: ICE_DEFAULT_IMAGE_BUILDER
+          value: "kaniko"
