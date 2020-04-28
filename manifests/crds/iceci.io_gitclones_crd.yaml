@@ -2,21 +2,20 @@
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
-  name: dockerbuilds.icekube.io
+  name: gitclones.iceci.io
 spec:
   additionalPrinterColumns:
   - JSONPath: .status.phase
     description: Phase
     format: byte
     name: phase
-    priority: 1
     type: string
-  group: icekube.io
+  group: iceci.io
   names:
-    kind: DockerBuild
-    listKind: DockerBuildList
-    plural: dockerbuilds
-    singular: dockerbuild
+    kind: GitClone
+    listKind: GitCloneList
+    plural: gitclones
+    singular: gitclone
   scope: Namespaced
   subresources:
     status: {}
@@ -37,54 +36,61 @@ spec:
           type: object
         spec:
           properties:
-            docker:
+            getMetadata:
+              type: boolean
+            git:
               properties:
-                contextPath:
-                  description: Path relative to workspace directory
+                auth:
+                  properties:
+                    secret:
+                      type: string
+                    type:
+                      type: string
+                  required:
+                  - secret
+                  - type
+                  type: object
+                checkout:
                   type: string
-                dockerfilePath:
-                  description: Path relative to workspace directory
-                  type: string
-                imageName:
-                  type: string
-                registry:
-                  type: string
-                tag:
-                  type: string
-                user:
+                repositoryURL:
                   type: string
               required:
-              - contextPath
-              - dockerfilePath
-              - imageName
-              - tag
-              - user
+              - repositoryURL
               type: object
-            dockerSecret:
-              type: string
-            volumeMounts:
-              items:
-                properties:
-                  name:
-                    type: string
-                  path:
-                    type: string
-                  pvcName:
-                    type: string
-                  subPath:
-                    type: string
-                required:
-                - name
-                - pvcName
-                type: object
-              type: array
+            volume:
+              properties:
+                pvcName:
+                  type: string
+                subPath:
+                  type: string
+              required:
+              - pvcName
+              type: object
           required:
-          - docker
-          - dockerSecret
-          - volumeMounts
+          - git
+          - volume
           type: object
         status:
           properties:
+            checkoutMetadata:
+              properties:
+                authorDate:
+                  type: string
+                authorEmail:
+                  type: string
+                authorName:
+                  type: string
+                commitHash:
+                  type: string
+                logHeader:
+                  type: string
+                logMessage:
+                  type: string
+                reflogEmail:
+                  type: string
+                reflogName:
+                  type: string
+              type: object
             duration:
               format: int32
               type: integer
@@ -95,12 +101,6 @@ spec:
               format: date-time
               type: string
             message:
-              type: string
-            pendingDuration:
-              format: int32
-              type: integer
-            pendingStartedTime:
-              format: date-time
               type: string
             phase:
               type: string

@@ -2,14 +2,575 @@
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
+  name: backingservices.iceci.io
+spec:
+  additionalPrinterColumns:
+    - JSONPath: .status.phase
+      description: Phase
+      format: byte
+      name: phase
+      priority: 1
+      type: string
+  group: iceci.io
+  names:
+    kind: BackingService
+    listKind: BackingServiceList
+    plural: backingservices
+    singular: backingservice
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          properties:
+            dockerSecret:
+              properties:
+                secretName:
+                  description: Name of kubernetes secret
+                  type: string
+              required:
+                - secretName
+              type: object
+            environment:
+              items:
+                properties:
+                  fromSecret:
+                    type: string
+                  name:
+                    type: string
+                  value:
+                    type: string
+                required:
+                  - name
+                type: object
+              type: array
+            hosts:
+              additionalProperties:
+                type: string
+              type: object
+            image:
+              type: string
+            imagePullSecret:
+              type: string
+            nodeSelector:
+              additionalProperties:
+                type: string
+              type: object
+            resourceRequest:
+              properties:
+                cpu:
+                  type: string
+                memory:
+                  type: string
+              type: object
+            runtimeProfile:
+              type: string
+            script:
+              type: string
+            serviceName:
+              pattern: ^[a-z]+[a-z\-_0-9]+$
+              type: string
+          required:
+            - image
+            - serviceName
+          type: object
+        status:
+          properties:
+            duration:
+              format: int32
+              type: integer
+            finishedTime:
+              format: date-time
+              type: string
+            initializedTime:
+              format: date-time
+              type: string
+            message:
+              type: string
+            pendingDuration:
+              format: int32
+              type: integer
+            pendingStartedTime:
+              format: date-time
+              type: string
+            phase:
+              type: string
+            podIP:
+              type: string
+            podStatus:
+              properties:
+                exitCode:
+                  description: Pod main container (at index 0) return code
+                  format: int32
+                  type: integer
+                name:
+                  description: Name of pod
+                  type: string
+              type: object
+            reason:
+              type: string
+          type: object
+      type: object
+  version: v1alpha1
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: containerbuilds.iceci.io
+spec:
+  additionalPrinterColumns:
+    - JSONPath: .metadata.creationTimestamp
+      description: Age
+      format: date-time
+      name: age
+      type: date
+    - JSONPath: .status.phase
+      description: Phase
+      format: byte
+      name: phase
+      type: string
+    - JSONPath: .status.podStatus.name
+      description: PodName
+      format: byte
+      name: podname
+      type: string
+  group: iceci.io
+  names:
+    kind: ContainerBuild
+    listKind: ContainerBuildList
+    plural: containerbuilds
+    singular: containerbuild
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          properties:
+            docker:
+              properties:
+                contextPath:
+                  description: Absolute path that will be used as context
+                  type: string
+                dockerfilePath:
+                  description: Absolute path to the dockerfile
+                  type: string
+                imageName:
+                  type: string
+                registry:
+                  type: string
+                tags:
+                  description: Tags that will be pushed to registry
+                  items:
+                    type: string
+                  minItems: 1
+                  type: array
+                user:
+                  type: string
+              required:
+                - contextPath
+                - dockerfilePath
+                - imageName
+                - tags
+                - user
+              type: object
+            dockerSecret:
+              type: string
+            runtimeProfile:
+              type: string
+            volumeMounts:
+              items:
+                properties:
+                  name:
+                    type: string
+                  path:
+                    type: string
+                  pvcName:
+                    type: string
+                  subPath:
+                    type: string
+                required:
+                  - name
+                  - pvcName
+                type: object
+              type: array
+          required:
+            - docker
+            - dockerSecret
+            - volumeMounts
+          type: object
+        status:
+          properties:
+            duration:
+              format: int32
+              type: integer
+            finishedTime:
+              format: date-time
+              type: string
+            initializedTime:
+              format: date-time
+              type: string
+            message:
+              type: string
+            pendingDuration:
+              format: int32
+              type: integer
+            pendingStartedTime:
+              format: date-time
+              type: string
+            phase:
+              type: string
+            podStatus:
+              properties:
+                exitCode:
+                  description: Pod main container (at index 0) return code
+                  format: int32
+                  type: integer
+                name:
+                  description: Name of pod
+                  type: string
+              type: object
+            reason:
+              type: string
+          type: object
+      type: object
+  version: v1alpha1
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: containerruns.iceci.io
+spec:
+  additionalPrinterColumns:
+    - JSONPath: .metadata.creationTimestamp
+      description: Age
+      format: date-time
+      name: age
+      type: date
+    - JSONPath: .status.phase
+      description: Phase
+      format: byte
+      name: phase
+      type: string
+    - JSONPath: .status.podStatus.name
+      description: Pod name
+      format: byte
+      name: podName
+      priority: 1
+      type: string
+    - JSONPath: .status.podStatus.exitCode
+      description: ExitWithError code
+      format: int32
+      name: exitCode
+      priority: 1
+      type: integer
+  group: iceci.io
+  names:
+    kind: ContainerRun
+    listKind: ContainerRunList
+    plural: containerruns
+    singular: containerrun
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          properties:
+            cleanupTTL:
+              type: integer
+            environment:
+              items:
+                properties:
+                  fromSecret:
+                    type: string
+                  name:
+                    type: string
+                  value:
+                    type: string
+                required:
+                  - name
+                type: object
+              type: array
+            files:
+              items:
+                properties:
+                  fromSecret:
+                    type: string
+                  path:
+                    type: string
+                required:
+                  - fromSecret
+                  - path
+                type: object
+              type: array
+            hosts:
+              additionalProperties:
+                type: string
+              type: object
+            image:
+              type: string
+            imagePullPolicy:
+              description: PullPolicy describes a policy for if/when to pull a container
+                image
+              type: string
+            imagePullSecret:
+              type: string
+            runtimeProfile:
+              type: string
+            script:
+              type: string
+            serviceAccountName:
+              type: string
+            volumeMounts:
+              items:
+                properties:
+                  name:
+                    type: string
+                  path:
+                    type: string
+                  pvcName:
+                    type: string
+                  subPath:
+                    type: string
+                required:
+                  - name
+                  - pvcName
+                type: object
+              type: array
+            workingDir:
+              type: string
+          required:
+            - image
+          type: object
+        status:
+          properties:
+            cleanupTime:
+              format: date-time
+              type: string
+            duration:
+              format: int32
+              type: integer
+            finishedTime:
+              format: date-time
+              type: string
+            initializedTime:
+              format: date-time
+              type: string
+            message:
+              type: string
+            pendingDuration:
+              format: int32
+              type: integer
+            pendingStartedTime:
+              format: date-time
+              type: string
+            phase:
+              type: string
+            podStatus:
+              properties:
+                exitCode:
+                  description: Pod main container (at index 0) return code
+                  format: int32
+                  type: integer
+                name:
+                  description: Name of pod
+                  type: string
+              type: object
+            reason:
+              type: string
+          type: object
+      type: object
+  version: v1alpha1
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: gitclones.iceci.io
+spec:
+  additionalPrinterColumns:
+    - JSONPath: .status.phase
+      description: Phase
+      format: byte
+      name: phase
+      type: string
+  group: iceci.io
+  names:
+    kind: GitClone
+    listKind: GitCloneList
+    plural: gitclones
+    singular: gitclone
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          properties:
+            getMetadata:
+              type: boolean
+            git:
+              properties:
+                auth:
+                  properties:
+                    secret:
+                      type: string
+                    type:
+                      type: string
+                  required:
+                    - secret
+                    - type
+                  type: object
+                checkout:
+                  type: string
+                repositoryURL:
+                  type: string
+              required:
+                - repositoryURL
+              type: object
+            volume:
+              properties:
+                pvcName:
+                  type: string
+                subPath:
+                  type: string
+              required:
+                - pvcName
+              type: object
+          required:
+            - git
+            - volume
+          type: object
+        status:
+          properties:
+            checkoutMetadata:
+              properties:
+                authorDate:
+                  type: string
+                authorEmail:
+                  type: string
+                authorName:
+                  type: string
+                commitHash:
+                  type: string
+                logHeader:
+                  type: string
+                logMessage:
+                  type: string
+                reflogEmail:
+                  type: string
+                reflogName:
+                  type: string
+              type: object
+            duration:
+              format: int32
+              type: integer
+            finishedTime:
+              format: date-time
+              type: string
+            initializedTime:
+              format: date-time
+              type: string
+            message:
+              type: string
+            phase:
+              type: string
+            podStatus:
+              properties:
+                exitCode:
+                  description: Pod main container (at index 0) return code
+                  format: int32
+                  type: integer
+                name:
+                  description: Name of pod
+                  type: string
+              type: object
+            reason:
+              type: string
+          type: object
+      type: object
+  version: v1alpha1
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
   name: gitpipelines.iceci.io
 spec:
   additionalPrinterColumns:
-  - JSONPath: .status.phase
-    description: Phase
-    format: byte
-    name: phase
-    type: string
+    - JSONPath: .status.phase
+      description: Phase
+      format: byte
+      name: phase
+      type: string
   group: iceci.io
   names:
     kind: GitPipeline
@@ -49,19 +610,20 @@ spec:
                     type:
                       type: string
                   required:
-                  - secret
-                  - type
+                    - secret
+                    - type
                   type: object
-                commitSHA:
+                checkout:
                   type: string
                 repositoryURL:
                   type: string
               required:
-              - commitSHA
-              - repositoryURL
+                - repositoryURL
               type: object
+            pipelineFilePath:
+              type: string
           required:
-          - git
+            - git
           type: object
         status:
           properties:
@@ -117,17 +679,17 @@ spec:
                 subPath:
                   type: string
               required:
-              - pvcName
+                - pvcName
               type: object
           required:
-          - workspaceVolume
+            - workspaceVolume
           type: object
       type: object
   version: v1alpha1
   versions:
-  - name: v1alpha1
-    served: true
-    storage: true
+    - name: v1alpha1
+      served: true
+      storage: true
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -169,27 +731,23 @@ spec:
                     type:
                       type: string
                   required:
-                  - secret
-                  - type
+                    - secret
+                    - type
                   type: object
-                provider:
-                  enum:
-                  - github
-                  - gitlab
-                  - gitea
-                  type: string
                 repositoryURL:
                   type: string
               required:
-              - repositoryURL
+                - repositoryURL
               type: object
             orphanPipelines:
               type: boolean
+            pipelineFilePath:
+              type: string
             schedule:
               type: string
           required:
-          - git
-          - schedule
+            - git
+            - schedule
           type: object
         status:
           properties:
@@ -209,10 +767,28 @@ spec:
                       type:
                         type: string
                     required:
-                    - name
-                    - refName
-                    - sha
-                    - type
+                      - name
+                      - refName
+                      - sha
+                      - type
+                    type: object
+                  type: array
+                pullRequests:
+                  items:
+                    properties:
+                      name:
+                        type: string
+                      refName:
+                        type: string
+                      sha:
+                        type: string
+                      type:
+                        type: string
+                    required:
+                      - name
+                      - refName
+                      - sha
+                      - type
                     type: object
                   type: array
                 tags:
@@ -227,10 +803,10 @@ spec:
                       type:
                         type: string
                     required:
-                    - name
-                    - refName
-                    - sha
-                    - type
+                      - name
+                      - refName
+                      - sha
+                      - type
                     type: object
                   type: array
               type: object
@@ -256,423 +832,42 @@ spec:
       type: object
   version: v1alpha1
   versions:
-  - name: v1alpha1
-    served: true
-    storage: true
+    - name: v1alpha1
+      served: true
+      storage: true
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
-  name: backingservices.icekube.io
+  name: pipelines.iceci.io
 spec:
   additionalPrinterColumns:
-  - JSONPath: .status.phase
-    description: Phase
-    format: byte
-    name: phase
-    priority: 1
-    type: string
-  group: icekube.io
-  names:
-    kind: BackingService
-    listKind: BackingServiceList
-    plural: backingservices
-    singular: backingservice
-  scope: Namespaced
-  subresources:
-    status: {}
-  validation:
-    openAPIV3Schema:
-      properties:
-        apiVersion:
-          description: 'APIVersion defines the versioned schema of this representation
-            of an object. Servers should convert recognized schemas to the latest
-            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
-          type: string
-        kind:
-          description: 'Kind is a string value representing the REST resource this
-            object represents. Servers may infer this from the endpoint the client
-            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
-          type: string
-        metadata:
-          type: object
-        spec:
-          properties:
-            dockerSecret:
-              properties:
-                secretName:
-                  description: Name of kubernetes secret
-                  type: string
-              required:
-              - secretName
-              type: object
-            environment:
-              items:
-                properties:
-                  fromSecret:
-                    type: string
-                  name:
-                    type: string
-                  value:
-                    type: string
-                required:
-                - name
-                type: object
-              type: array
-            hosts:
-              additionalProperties:
-                type: string
-              type: object
-            image:
-              type: string
-            imagePullSecret:
-              type: string
-            nodeSelector:
-              additionalProperties:
-                type: string
-              type: object
-            resourceRequest:
-              properties:
-                cpu:
-                  type: string
-                memory:
-                  type: string
-              type: object
-            script:
-              type: string
-            serviceName:
-              pattern: ^[a-z]+[a-z\-_0-9]+$
-              type: string
-          required:
-          - image
-          - serviceName
-          type: object
-        status:
-          properties:
-            duration:
-              format: int32
-              type: integer
-            finishedTime:
-              format: date-time
-              type: string
-            initializedTime:
-              format: date-time
-              type: string
-            message:
-              type: string
-            pendingDuration:
-              format: int32
-              type: integer
-            pendingStartedTime:
-              format: date-time
-              type: string
-            phase:
-              type: string
-            podIP:
-              type: string
-            podStatus:
-              properties:
-                exitCode:
-                  description: Pod main container (at index 0) return code
-                  format: int32
-                  type: integer
-                name:
-                  description: Name of pod
-                  type: string
-              type: object
-            reason:
-              type: string
-          type: object
-      type: object
-  version: v1alpha1
-  versions:
-  - name: v1alpha1
-    served: true
-    storage: true
----
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  name: dockerbuilds.icekube.io
-spec:
-  additionalPrinterColumns:
-  - JSONPath: .status.phase
-    description: Phase
-    format: byte
-    name: phase
-    priority: 1
-    type: string
-  group: icekube.io
-  names:
-    kind: DockerBuild
-    listKind: DockerBuildList
-    plural: dockerbuilds
-    singular: dockerbuild
-  scope: Namespaced
-  subresources:
-    status: {}
-  validation:
-    openAPIV3Schema:
-      properties:
-        apiVersion:
-          description: 'APIVersion defines the versioned schema of this representation
-            of an object. Servers should convert recognized schemas to the latest
-            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
-          type: string
-        kind:
-          description: 'Kind is a string value representing the REST resource this
-            object represents. Servers may infer this from the endpoint the client
-            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
-          type: string
-        metadata:
-          type: object
-        spec:
-          properties:
-            docker:
-              properties:
-                contextPath:
-                  description: Path relative to workspace directory
-                  type: string
-                dockerfilePath:
-                  description: Path relative to workspace directory
-                  type: string
-                imageName:
-                  type: string
-                registry:
-                  type: string
-                tag:
-                  type: string
-                user:
-                  type: string
-              required:
-              - contextPath
-              - dockerfilePath
-              - imageName
-              - tag
-              - user
-              type: object
-            dockerSecret:
-              type: string
-            volumeMounts:
-              items:
-                properties:
-                  name:
-                    type: string
-                  path:
-                    type: string
-                  pvcName:
-                    type: string
-                  subPath:
-                    type: string
-                required:
-                - name
-                - pvcName
-                type: object
-              type: array
-          required:
-          - docker
-          - dockerSecret
-          - volumeMounts
-          type: object
-        status:
-          properties:
-            duration:
-              format: int32
-              type: integer
-            finishedTime:
-              format: date-time
-              type: string
-            initializedTime:
-              format: date-time
-              type: string
-            message:
-              type: string
-            pendingDuration:
-              format: int32
-              type: integer
-            pendingStartedTime:
-              format: date-time
-              type: string
-            phase:
-              type: string
-            podStatus:
-              properties:
-                exitCode:
-                  description: Pod main container (at index 0) return code
-                  format: int32
-                  type: integer
-                name:
-                  description: Name of pod
-                  type: string
-              type: object
-            reason:
-              type: string
-          type: object
-      type: object
-  version: v1alpha1
-  versions:
-  - name: v1alpha1
-    served: true
-    storage: true
----
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  name: gitclones.icekube.io
-spec:
-  additionalPrinterColumns:
-  - JSONPath: .status.phase
-    description: Phase
-    format: byte
-    name: phase
-    type: string
-  group: icekube.io
-  names:
-    kind: GitClone
-    listKind: GitCloneList
-    plural: gitclones
-    singular: gitclone
-  scope: Namespaced
-  subresources:
-    status: {}
-  validation:
-    openAPIV3Schema:
-      properties:
-        apiVersion:
-          description: 'APIVersion defines the versioned schema of this representation
-            of an object. Servers should convert recognized schemas to the latest
-            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
-          type: string
-        kind:
-          description: 'Kind is a string value representing the REST resource this
-            object represents. Servers may infer this from the endpoint the client
-            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
-          type: string
-        metadata:
-          type: object
-        spec:
-          properties:
-            getMetadata:
-              type: boolean
-            git:
-              properties:
-                auth:
-                  properties:
-                    secret:
-                      type: string
-                    type:
-                      type: string
-                  required:
-                  - secret
-                  - type
-                  type: object
-                commitSHA:
-                  type: string
-                repositoryURL:
-                  type: string
-              required:
-              - commitSHA
-              - repositoryURL
-              type: object
-            volume:
-              properties:
-                pvcName:
-                  type: string
-                subPath:
-                  type: string
-              required:
-              - pvcName
-              type: object
-          required:
-          - git
-          - volume
-          type: object
-        status:
-          properties:
-            checkoutMetadata:
-              properties:
-                authorDate:
-                  type: string
-                authorEmail:
-                  type: string
-                authorName:
-                  type: string
-                commitHash:
-                  type: string
-                logHeader:
-                  type: string
-                logMessage:
-                  type: string
-                reflogEmail:
-                  type: string
-                reflogName:
-                  type: string
-              type: object
-            duration:
-              format: int32
-              type: integer
-            finishedTime:
-              format: date-time
-              type: string
-            initializedTime:
-              format: date-time
-              type: string
-            message:
-              type: string
-            phase:
-              type: string
-            podStatus:
-              properties:
-                exitCode:
-                  description: Pod main container (at index 0) return code
-                  format: int32
-                  type: integer
-                name:
-                  description: Name of pod
-                  type: string
-              type: object
-            reason:
-              type: string
-          type: object
-      type: object
-  version: v1alpha1
-  versions:
-  - name: v1alpha1
-    served: true
-    storage: true
----
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  name: pipelines.icekube.io
-spec:
-  additionalPrinterColumns:
-  - JSONPath: .metadata.creationTimestamp
-    description: Age
-    format: date-time
-    name: age
-    type: date
-  - JSONPath: .status.phase
-    description: Phase
-    format: byte
-    name: phase
-    type: string
-  - JSONPath: .status.stage
-    description: Stage
-    format: byte
-    name: stage
-    type: string
-  - JSONPath: .status.currentStep
-    description: Current step
-    format: int32
-    name: s
-    type: integer
-  - JSONPath: .status.currentFailureHandler
-    description: Current failure handler
-    format: int32
-    name: fh
-    type: integer
-  group: icekube.io
+    - JSONPath: .metadata.creationTimestamp
+      description: Age
+      format: date-time
+      name: age
+      type: date
+    - JSONPath: .status.phase
+      description: Phase
+      format: byte
+      name: phase
+      type: string
+    - JSONPath: .status.stage
+      description: Stage
+      format: byte
+      name: stage
+      type: string
+    - JSONPath: .status.currentStep
+      description: Current step
+      format: int32
+      name: s
+      type: integer
+    - JSONPath: .status.currentFailureHandler
+      description: Current failure handler
+      format: int32
+      name: fh
+      type: integer
+  group: iceci.io
   names:
     kind: Pipeline
     listKind: PipelineList
@@ -716,7 +911,7 @@ spec:
                               description: Name of config map or secret
                               type: string
                           required:
-                          - objectName
+                            - objectName
                           type: object
                         type: array
                       environment:
@@ -729,7 +924,7 @@ spec:
                             value:
                               type: string
                           required:
-                          - name
+                            - name
                           type: object
                         type: array
                       files:
@@ -740,8 +935,8 @@ spec:
                             path:
                               type: string
                           required:
-                          - fromSecret
-                          - path
+                            - fromSecret
+                            - path
                           type: object
                         type: array
                       image:
@@ -754,8 +949,8 @@ spec:
                       script:
                         type: string
                     required:
-                    - image
-                    - name
+                      - image
+                      - name
                     type: object
                   type: array
                 globals:
@@ -770,7 +965,19 @@ spec:
                           value:
                             type: string
                         required:
-                        - name
+                          - name
+                        type: object
+                      type: array
+                    files:
+                      items:
+                        properties:
+                          fromSecret:
+                            type: string
+                          path:
+                            type: string
+                        required:
+                          - fromSecret
+                          - path
                         type: object
                       type: array
                     imagePullSecret:
@@ -781,9 +988,15 @@ spec:
                           handlerName:
                             type: string
                         required:
-                        - handlerName
+                          - handlerName
                         type: object
                       type: array
+                    runtimeProfile:
+                      type: string
+                  type: object
+                pipelineContext:
+                  additionalProperties:
+                    type: string
                   type: object
                 services:
                   items:
@@ -801,7 +1014,7 @@ spec:
                               description: Name of config map or secret
                               type: string
                           required:
-                          - objectName
+                            - objectName
                           type: object
                         type: array
                       environment:
@@ -814,7 +1027,7 @@ spec:
                             value:
                               type: string
                           required:
-                          - name
+                            - name
                           type: object
                         type: array
                       image:
@@ -830,20 +1043,20 @@ spec:
                             handlerName:
                               type: string
                           required:
-                          - handlerName
+                            - handlerName
                           type: object
                         type: array
                       script:
                         type: string
                     required:
-                    - image
-                    - name
+                      - image
+                      - name
                     type: object
                   type: array
                 steps:
                   items:
                     properties:
-                      dockerBuild:
+                      containerBuild:
                         properties:
                           contextPath:
                             description: Path relative to workspace directory
@@ -857,15 +1070,18 @@ spec:
                             type: string
                           registry:
                             type: string
-                          tag:
-                            type: string
+                          tags:
+                            items:
+                              type: string
+                            minItems: 1
+                            type: array
                           user:
                             type: string
                         required:
-                        - imageBuildSecret
-                        - imageName
-                        - tag
-                        - user
+                          - imageBuildSecret
+                          - imageName
+                          - tags
+                          - user
                         type: object
                       name:
                         pattern: ^[a-z]+[a-z\-_0-9]+$
@@ -876,9 +1092,11 @@ spec:
                             handlerName:
                               type: string
                           required:
-                          - handlerName
+                            - handlerName
                           type: object
                         type: array
+                      runtimeProfile:
+                        type: string
                       simpleStep:
                         properties:
                           envFromSecret:
@@ -894,7 +1112,7 @@ spec:
                                   description: Name of config map or secret
                                   type: string
                               required:
-                              - objectName
+                                - objectName
                               type: object
                             type: array
                           environment:
@@ -907,7 +1125,7 @@ spec:
                                 value:
                                   type: string
                               required:
-                              - name
+                                - name
                               type: object
                             type: array
                           files:
@@ -918,8 +1136,8 @@ spec:
                                 path:
                                   type: string
                               required:
-                              - fromSecret
-                              - path
+                                - fromSecret
+                                - path
                               type: object
                             type: array
                           image:
@@ -929,10 +1147,10 @@ spec:
                           script:
                             type: string
                         required:
-                        - image
+                          - image
                         type: object
                     required:
-                    - name
+                      - name
                     type: object
                   type: array
                 workingDir:
@@ -950,12 +1168,12 @@ spec:
                   subPath:
                     type: string
                 required:
-                - name
-                - pvcName
+                  - name
+                  - pvcName
                 type: object
               type: array
           required:
-          - pipelineSpec
+            - pipelineSpec
           type: object
         status:
           properties:
@@ -974,7 +1192,7 @@ spec:
                   handlerName:
                     type: string
                 required:
-                - handlerName
+                  - handlerName
                 type: object
               type: array
             failureHandlerStatuses:
@@ -1063,44 +1281,21 @@ spec:
       type: object
   version: v1alpha1
   versions:
-  - name: v1alpha1
-    served: true
-    storage: true
+    - name: v1alpha1
+      served: true
+      storage: true
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
-  name: tasks.icekube.io
+  name: repositories.iceci.io
 spec:
-  additionalPrinterColumns:
-  - JSONPath: .metadata.creationTimestamp
-    description: Age
-    format: date-time
-    name: age
-    type: date
-  - JSONPath: .status.phase
-    description: Phase
-    format: byte
-    name: phase
-    type: string
-  - JSONPath: .status.podStatus.name
-    description: Pod name
-    format: byte
-    name: podName
-    priority: 1
-    type: string
-  - JSONPath: .status.podStatus.exitCode
-    description: Exit code
-    format: int32
-    name: exitCode
-    priority: 1
-    type: integer
-  group: icekube.io
+  group: iceci.io
   names:
-    kind: Task
-    listKind: TaskList
-    plural: tasks
-    singular: task
+    kind: Repository
+    listKind: RepositoryList
+    plural: repositories
+    singular: repository
   scope: Namespaced
   subresources:
     status: {}
@@ -1121,181 +1316,235 @@ spec:
           type: object
         spec:
           properties:
-            autoLoad:
-              type: boolean
-            cleanupTTL:
-              type: integer
-            configMapEnv:
-              items:
-                type: string
-              type: array
-            configMapVolume:
-              items:
-                type: string
-              type: array
-            envFromSecret:
-              items:
-                properties:
-                  envName:
-                    description: Name of environment variable
-                    type: string
-                  objectKey:
-                    description: Key in config map or secret
-                    type: string
-                  objectName:
-                    description: Name of config map or secret
-                    type: string
-                required:
-                - objectName
-                type: object
-              type: array
-            environment:
-              items:
-                properties:
-                  fromSecret:
-                    type: string
-                  name:
-                    type: string
-                  value:
-                    type: string
-                required:
-                - name
-                type: object
-              type: array
-            files:
-              items:
-                properties:
-                  fromSecret:
-                    type: string
-                  path:
-                    type: string
-                required:
-                - fromSecret
-                - path
-                type: object
-              type: array
-            hosts:
-              additionalProperties:
-                type: string
-              type: object
-            image:
-              type: string
-            imagePullPolicy:
-              description: PullPolicy describes a policy for if/when to pull a container
-                image
-              type: string
-            imagePullSecret:
-              type: string
-            nodeSelector:
-              additionalProperties:
-                type: string
-              type: object
-            resourceRequest:
+            git:
               properties:
-                cpu:
+                auth:
+                  properties:
+                    secret:
+                      type: string
+                    type:
+                      type: string
+                  required:
+                    - secret
+                    - type
+                  type: object
+                repositoryURL:
                   type: string
-                memory:
-                  type: string
+              required:
+                - repositoryURL
               type: object
-            script:
-              type: string
-            secretEnv:
-              items:
-                type: string
-              type: array
-            secretVolume:
-              items:
-                type: string
-              type: array
-            serviceAccountName:
-              type: string
-            volumeMounts:
-              items:
-                properties:
-                  name:
-                    type: string
-                  path:
-                    type: string
-                  pvcName:
-                    type: string
-                  subPath:
-                    type: string
-                required:
-                - name
-                - pvcName
-                type: object
-              type: array
-            workingDir:
+            orphanPipelines:
+              type: boolean
+            pipelineFilePath:
               type: string
           required:
-          - image
+            - git
           type: object
         status:
           properties:
-            cleanupTime:
-              format: date-time
-              type: string
-            duration:
+            buildNumber:
               format: int32
               type: integer
-            finishedTime:
-              format: date-time
-              type: string
-            initializedTime:
-              format: date-time
-              type: string
+            knownGitEvent:
+              properties:
+                commits:
+                  items:
+                    properties:
+                      name:
+                        type: string
+                      refName:
+                        type: string
+                      sha:
+                        type: string
+                      type:
+                        type: string
+                    required:
+                      - name
+                      - refName
+                      - sha
+                      - type
+                    type: object
+                  type: array
+                pullRequests:
+                  items:
+                    properties:
+                      name:
+                        type: string
+                      refName:
+                        type: string
+                      sha:
+                        type: string
+                      type:
+                        type: string
+                    required:
+                      - name
+                      - refName
+                      - sha
+                      - type
+                    type: object
+                  type: array
+                tags:
+                  items:
+                    properties:
+                      name:
+                        type: string
+                      refName:
+                        type: string
+                      sha:
+                        type: string
+                      type:
+                        type: string
+                    required:
+                      - name
+                      - refName
+                      - sha
+                      - type
+                    type: object
+                  type: array
+              type: object
+            lastFailedRun:
+              properties:
+                runTime:
+                  format: date-time
+                  type: string
+              type: object
+            lastSuccessfulRun:
+              properties:
+                runTime:
+                  format: date-time
+                  type: string
+              type: object
             message:
-              type: string
-            pendingDuration:
-              format: int32
-              type: integer
-            pendingStartedTime:
-              format: date-time
               type: string
             phase:
               type: string
-            podStatus:
-              properties:
-                exitCode:
-                  description: Pod main container (at index 0) return code
-                  format: int32
-                  type: integer
-                name:
-                  description: Name of pod
-                  type: string
-              type: object
             reason:
               type: string
           type: object
       type: object
   version: v1alpha1
   versions:
-  - name: v1alpha1
-    served: true
-    storage: true
+    - name: v1alpha1
+      served: true
+      storage: true
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
-  name: workspaces.icekube.io
+  name: runtimeprofiles.iceci.io
 spec:
   additionalPrinterColumns:
-  - JSONPath: .status.phase
-    description: Phase
-    format: byte
-    name: phase
-    type: string
-  - JSONPath: .status.volume.pvcName
-    description: PVCName
-    format: byte
-    name: pvcname
-    type: string
-  - JSONPath: .status.volume.subPath
-    description: SubPath
-    format: byte
-    name: subpath
-    type: string
-  group: icekube.io
+    - JSONPath: .metadata.creationTimestamp
+      description: Age
+      format: date-time
+      name: age
+      type: date
+    - JSONPath: .status.state
+      description: State
+      format: byte
+      name: state
+      type: string
+  group: iceci.io
+  names:
+    kind: RuntimeProfile
+    listKind: RuntimeProfileList
+    plural: runtimeprofiles
+    singular: runtimeprofile
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          properties:
+            annotations:
+              additionalProperties:
+                type: string
+              type: object
+            imageBuilder:
+              enum:
+                - kaniko
+                - buildkit
+              type: string
+            labels:
+              additionalProperties:
+                type: string
+              type: object
+            nodeSelector:
+              additionalProperties:
+                type: string
+              type: object
+            resources:
+              description: ResourceRequirements describes the compute resource requirements.
+              properties:
+                limits:
+                  additionalProperties:
+                    type: string
+                  description: 'Limits describes the maximum amount of compute resources
+                    allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
+                  type: object
+                requests:
+                  additionalProperties:
+                    type: string
+                  description: 'Requests describes the minimum amount of compute resources
+                    required. If Requests is omitted for a container, it defaults
+                    to Limits if that is explicitly specified, otherwise to an implementation-defined
+                    value. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
+                  type: object
+              type: object
+            serviceAccountName:
+              type: string
+          type: object
+        status:
+          properties:
+            lastUpdateTime:
+              format: date-time
+              type: string
+            state:
+              type: string
+          type: object
+      type: object
+  version: v1alpha1
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: workspaces.iceci.io
+spec:
+  additionalPrinterColumns:
+    - JSONPath: .status.phase
+      description: Phase
+      format: byte
+      name: phase
+      type: string
+    - JSONPath: .status.volume.pvcName
+      description: PVCName
+      format: byte
+      name: pvcname
+      type: string
+    - JSONPath: .status.volume.subPath
+      description: SubPath
+      format: byte
+      name: subpath
+      type: string
+  group: iceci.io
   names:
     kind: Workspace
     listKind: WorkspaceList
@@ -1324,11 +1573,11 @@ spec:
           properties:
             storageType:
               enum:
-              - dynamic
-              - shared
+                - dynamic
+                - shared
               type: string
           required:
-          - storageType
+            - storageType
           type: object
         status:
           properties:
@@ -1345,15 +1594,15 @@ spec:
                 subPath:
                   type: string
               required:
-              - pvcName
+                - pvcName
               type: object
           type: object
       type: object
   version: v1alpha1
   versions:
-  - name: v1alpha1
-    served: true
-    storage: true
+    - name: v1alpha1
+      served: true
+      storage: true
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -1371,105 +1620,122 @@ spec:
     spec:
       serviceAccountName: iceci-operator
       containers:
-      - name: iceci-operator
-        image: docker.io/iceci/iceci-operator:alpha4
-        imagePullPolicy: Always
-        env:
-        - name: ICE_NAMESPACE
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace
-        - name: POD_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.name
-        - name: OPERATOR_NAME
-          value: "iceci-operator"
-        - name: ICE_DYNAMIC_PVC
-          value: iceci-dynamic-storage
-        - name: ICE_SHARED_PVC
-          value: iceci-shared-storage
-        - name: ICE_IMAGE_KANIKO
-          value: "gcr.io/kaniko-project/executor:v0.16.0"
-        - name: ICE_IMAGE_UTILS
-          value: "iceci/utils:2"
-        - name: ICE_IMAGE_BUILDKIT
-          value: "moby/buildkit:v0.6.4-rootless"
+        - name: iceci-operator
+          image: docker.io/iceci/iceci-operator:alpha5
+          imagePullPolicy: Always
+          env:
+            - name: ICE_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OPERATOR_NAME
+              value: "iceci-operator"
+            - name: ICE_DYNAMIC_PVC
+              value: iceci-dynamic-storage
+            - name: ICE_SHARED_PVC
+              value: iceci-shared-storage
+            - name: ICE_IMAGE_KANIKO
+              value: "gcr.io/kaniko-project/executor:v0.16.0"
+            - name: ICE_IMAGE_UTILS
+              value: "iceci/utils:2"
+            - name: ICE_IMAGE_BUILDKIT
+              value: "moby/buildkit:v0.6.4-rootless"
+            - name: ICE_STEP_SERVICE_ACCOUNT
+              value: "iceci-operator-step"
+            - name: ICE_DEFAULT_IMAGE_BUILDER
+              value: "kaniko"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: iceci-operator
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+      - "pods/log"
+      - services
+      - endpoints
+      - persistentvolumeclaims
+      - events
+      - configmaps
+      - secrets
+    verbs:
+      - '*'
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+      - daemonsets
+      - replicasets
+      - statefulsets
+    verbs:
+      - '*'
+  - apiGroups:
+      - batch
+    resources:
+      - cronjobs
+      - jobs
+    verbs:
+      - '*'
+  - apiGroups:
+      - monitoring.coreos.com
+    resources:
+      - servicemonitors
+    verbs:
+      - get
+      - create
+  - apiGroups:
+      - apps
+    resourceNames:
+      - ice-operator
+    resources:
+      - deployments/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - iceci.io
+    resources:
+      - '*'
+      - runtimeprofiles
+    verbs:
+      - '*'
+  - apiGroups:
+      - iceai.io
+    resources:
+      - '*'
+    verbs:
+      - '*'
+  - apiGroups:
+      - sdk.icetek.io
+    resources:
+      - '*'
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
 ---
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: iceci-operator
 subjects:
-- kind: ServiceAccount
-  name: iceci-operator
+  - kind: ServiceAccount
+    name: iceci-operator
 roleRef:
   kind: Role
   name: iceci-operator
   apiGroup: rbac.authorization.k8s.io
 ---
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: iceci-operator
-rules:
-- apiGroups:
-  - ""
-  resources:
-  - pods
-  - "pods/log"
-  - services
-  - endpoints
-  - persistentvolumeclaims
-  - events
-  - configmaps
-  - secrets
-  verbs:
-  - '*'
-- apiGroups:
-  - apps
-  resources:
-  - deployments
-  - daemonsets
-  - replicasets
-  - statefulsets
-  verbs:
-  - '*'
-- apiGroups:
-  - batch
-  resources:
-  - cronjobs
-  - jobs
-  verbs:
-  - '*'
-- apiGroups:
-  - monitoring.coreos.com
-  resources:
-  - servicemonitors
-  verbs:
-  - get
-  - create
-- apiGroups:
-  - apps
-  resourceNames:
-  - iceci-operator
-  resources:
-  - deployments/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - iceci.io
-  resources:
-  - '*'
-  verbs:
-  - '*'
-- apiGroups:
-  - icekube.io
-  resources:
-  - '*'
-  verbs:
-  - '*'
----
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -1478,35 +1744,35 @@ metadata:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: ice-operator-step
+  name: iceci-operator-step
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: ice-operator-step
+  name: iceci-operator-step
 rules:
-- apiGroups:
-  - ""
-  resources:
-  - configmaps
-  verbs:
-  - patch
-  - get
-  - create
-  - delete
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    verbs:
+      - patch
+      - get
+      - create
+      - delete
 
 ---
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: ice-operator-step
+  name: iceci-operator-step
 subjects:
-- kind: ServiceAccount
-  name: ice-operator-step
+  - kind: ServiceAccount
+    name: iceci-operator-step
 roleRef:
   kind: Role
-  name: ice-operator-step
+  name: iceci-operator-step
   apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: v1
@@ -1519,8 +1785,7 @@ spec:
   capacity:
     storage: 1Gi
   accessModes:
-  - ReadWriteMany
-  storageClassName: ""
+    - ReadWriteMany
   hostPath:
     path: /iceci/shared-storage
     type: DirectoryOrCreate
@@ -1532,7 +1797,7 @@ metadata:
   name: iceci-shared-storage
 spec:
   accessModes:
-  - ReadWriteMany
+    - ReadWriteMany
   resources:
     requests:
       storage: 1Gi
@@ -1551,8 +1816,7 @@ spec:
   capacity:
     storage: 1Gi
   accessModes:
-  - ReadWriteMany
-  storageClassName: ""
+    - ReadWriteMany
   hostPath:
     path: /iceci/dynamic-storage
     type: DirectoryOrCreate
@@ -1564,7 +1828,7 @@ metadata:
   name: iceci-dynamic-storage
 spec:
   accessModes:
-  - ReadWriteMany
+    - ReadWriteMany
   resources:
     requests:
       storage: 1Gi
@@ -1590,26 +1854,26 @@ spec:
     spec:
       serviceAccountName: iceci-operator
       containers:
-      - name: iceci-api
-        image: docker.io/iceci/iceci-api:alpha4
-        imagePullPolicy: Always
-        env:
-        - name: ICE_NAMESPACE
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace
-        - name: ICECI_DB_USER
-          value: user
-        - name: ICECI_DB_HOST
-          value: iceci-postgres
-        - name: ICECI_DB_NAME
-          value: iceci
-        - name: ICECI_DB_PASS
-          value: pass
-        - name: ICECI_DB_PORT
-          value: "5432"
-        - name: ICECI_DB_DIALECT
-          value: postgres
+        - name: iceci-api
+          image: docker.io/iceci/iceci-api:alpha5
+          imagePullPolicy: Always
+          env:
+            - name: ICE_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: ICECI_DB_USER
+              value: user
+            - name: ICECI_DB_HOST
+              value: iceci-postgres
+            - name: ICECI_DB_NAME
+              value: iceci
+            - name: ICECI_DB_PASS
+              value: pass
+            - name: ICECI_DB_PORT
+              value: "5432"
+            - name: ICECI_DB_DIALECT
+              value: postgres
 
 ---
 apiVersion: v1
@@ -1621,10 +1885,11 @@ spec:
     name: iceci-api
   type: ClusterIP
   ports:
-  - protocol: TCP
-    name: api
-    port: 80
-    targetPort: 8000
+    - protocol: TCP
+      name: api
+      port: 80
+      targetPort: 8000
+
 ---
 apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
@@ -1632,17 +1897,17 @@ metadata:
   name: iceci
 spec:
   rules:
-  #  - host: iceci.local
-  - http:
-      paths:
-      - path: /api
-        backend:
-          serviceName: iceci-api
-          servicePort: 80
-      - path: /
-        backend:
-          serviceName: iceci-ui
-          servicePort: 80
+    #  - host: iceci.local
+    - http:
+        paths:
+          - path: /api
+            backend:
+              serviceName: iceci-api
+              servicePort: 80
+          - path: /
+            backend:
+              serviceName: iceci-ui
+              servicePort: 80
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -1653,7 +1918,7 @@ spec:
     matchLabels:
       name: iceci-postgres
   accessModes:
-  - ReadWriteOnce
+    - ReadWriteOnce
   resources:
     requests:
       storage: 1Gi
@@ -1669,7 +1934,7 @@ spec:
   capacity:
     storage: 1Gi
   accessModes:
-  - ReadWriteOnce
+    - ReadWriteOnce
   hostPath:
     path: /iceci/postgres
     type: DirectoryOrCreate
@@ -1690,27 +1955,27 @@ spec:
         name: iceci-postgres
     spec:
       containers:
-      - name: iceci-postgres
-        image: postgres:11
-        ports:
-        - containerPort: 5432
-        imagePullPolicy: Always
-        env:
-        - name: OPERATOR_NAME
-          value: "iceci-postgres"
-        - name: POSTGRES_PASSWORD
-          value: pass
-        - name: POSTGRES_USER
-          value: user
-        - name: POSTGRES_DB
-          value: iceci
-        volumeMounts:
-        - mountPath: /var/lib/postgresql/data/
-          name: pgdata
+        - name: iceci-postgres
+          image: postgres:11
+          ports:
+            - containerPort: 5432
+          imagePullPolicy: Always
+          env:
+            - name: OPERATOR_NAME
+              value: "iceci-postgres"
+            - name: POSTGRES_PASSWORD
+              value: pass
+            - name: POSTGRES_USER
+              value: user
+            - name: POSTGRES_DB
+              value: iceci
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data/
+              name: pgdata
       volumes:
-      - name: pgdata
-        persistentVolumeClaim:
-          claimName: iceci-postgres
+        - name: pgdata
+          persistentVolumeClaim:
+            claimName: iceci-postgres
 
 ---
 apiVersion: v1
@@ -1721,10 +1986,10 @@ spec:
   selector:
     name: iceci-postgres
   ports:
-  - protocol: TCP
-    name: postgres
-    port: 5432
-    targetPort: 5432
+    - protocol: TCP
+      name: postgres
+      port: 5432
+      targetPort: 5432
 
 ---
 apiVersion: apps/v1
@@ -1743,42 +2008,43 @@ spec:
     spec:
       serviceAccountName: iceci-operator
       containers:
-      - name: iceci-sync
-        image: docker.io/iceci/iceci-sync:alpha4
-        imagePullPolicy: Always
-        env:
-        - name: ICE_NAMESPACE
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace
-        - name: POD_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.name
-        - name: OPERATOR_NAME
-          value: "iceci-sync"
-        - name: ICE_DYNAMIC_PVC
-          value: dynamic-storage
-        - name: ICE_SHARED_PVC
-          value: shared-storage
-        - name: ICE_IMAGE_KANIKO
-          value: "gcr.io/kaniko-project/executor:v0.16.0"
-        - name: ICE_IMAGE_BUILDKIT
-          value: "moby/buildkit:v0.6.4-rootless"
-        - name: ICE_IMAGE_UTILS
-          value: "iceci/utils-arm:2"
-        - name: ICECI_DB_USER
-          value: user
-        - name: ICECI_DB_HOST
-          value: iceci-postgres
-        - name: ICECI_DB_NAME
-          value: iceci
-        - name: ICECI_DB_PASS
-          value: pass
-        - name: ICECI_DB_PORT
-          value: "5432"
-        - name: ICECI_DB_DIALECT
-          value: postgres
+        - name: iceci-sync
+          image: docker.io/iceci/iceci-sync:alpha5
+          imagePullPolicy: Always
+          env:
+            - name: ICE_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OPERATOR_NAME
+              value: "iceci-sync"
+            - name: ICE_DYNAMIC_PVC
+              value: dynamic-storage
+            - name: ICE_SHARED_PVC
+              value: shared-storage
+            - name: ICECI_DB_USER
+              value: user
+            - name: ICECI_DB_HOST
+              value: iceci-postgres
+            - name: ICECI_DB_NAME
+              value: iceci
+            - name: ICECI_DB_PASS
+              value: pass
+            - name: ICECI_DB_PORT
+              value: "5432"
+            - name: ICECI_DB_DIALECT
+              value: postgres
+            - name: ICE_IMAGE_KANIKO
+              value: "gcr.io/kaniko-project/executor:v0.16.0"
+            - name: ICE_IMAGE_BUILDKIT
+              value: "moby/buildkit:v0.6.4-rootless"
+            - name: ICE_IMAGE_UTILS
+              value: "iceci/utils-arm:2"
+
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -1797,9 +2063,9 @@ spec:
         name: iceci-ui
     spec:
       containers:
-      - name: iceci-ui
-        image: docker.io/iceci/iceci-ui:alpha4
-        imagePullPolicy: Always
+        - name: iceci-ui
+          image: docker.io/iceci/iceci-ui:alpha5
+          imagePullPolicy: Always
 
 ---
 apiVersion: v1
@@ -1811,8 +2077,8 @@ spec:
     name: iceci-ui
   type: ClusterIP
   ports:
-  - protocol: TCP
-    name: ui
-    port: 80
-    targetPort: 80
+    - protocol: TCP
+      name: ui
+      port: 80
+      targetPort: 80
 

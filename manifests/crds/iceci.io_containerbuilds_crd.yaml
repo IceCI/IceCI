@@ -2,20 +2,30 @@
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
-  name: gitclones.icekube.io
+  name: containerbuilds.iceci.io
 spec:
   additionalPrinterColumns:
+  - JSONPath: .metadata.creationTimestamp
+    description: Age
+    format: date-time
+    name: age
+    type: date
   - JSONPath: .status.phase
     description: Phase
     format: byte
     name: phase
     type: string
-  group: icekube.io
+  - JSONPath: .status.podStatus.name
+    description: PodName
+    format: byte
+    name: podname
+    type: string
+  group: iceci.io
   names:
-    kind: GitClone
-    listKind: GitCloneList
-    plural: gitclones
-    singular: gitclone
+    kind: ContainerBuild
+    listKind: ContainerBuildList
+    plural: containerbuilds
+    singular: containerbuild
   scope: Namespaced
   subresources:
     status: {}
@@ -36,62 +46,60 @@ spec:
           type: object
         spec:
           properties:
-            getMetadata:
-              type: boolean
-            git:
+            docker:
               properties:
-                auth:
-                  properties:
-                    secret:
-                      type: string
-                    type:
-                      type: string
-                  required:
-                  - secret
-                  - type
-                  type: object
-                commitSHA:
+                contextPath:
+                  description: Absolute path that will be used as context
                   type: string
-                repositoryURL:
+                dockerfilePath:
+                  description: Absolute path to the dockerfile
+                  type: string
+                imageName:
+                  type: string
+                registry:
+                  type: string
+                tags:
+                  description: Tags that will be pushed to registry
+                  items:
+                    type: string
+                  minItems: 1
+                  type: array
+                user:
                   type: string
               required:
-              - commitSHA
-              - repositoryURL
+              - contextPath
+              - dockerfilePath
+              - imageName
+              - tags
+              - user
               type: object
-            volume:
-              properties:
-                pvcName:
-                  type: string
-                subPath:
-                  type: string
-              required:
-              - pvcName
-              type: object
+            dockerSecret:
+              type: string
+            runtimeProfile:
+              type: string
+            volumeMounts:
+              items:
+                properties:
+                  name:
+                    type: string
+                  path:
+                    type: string
+                  pvcName:
+                    type: string
+                  subPath:
+                    type: string
+                required:
+                - name
+                - pvcName
+                type: object
+              type: array
           required:
-          - git
-          - volume
+          - docker
+          - dockerSecret
+          - volumeMounts
           type: object
         status:
           properties:
-            checkoutMetadata:
-              properties:
-                authorDate:
-                  type: string
-                authorEmail:
-                  type: string
-                authorName:
-                  type: string
-                commitHash:
-                  type: string
-                logHeader:
-                  type: string
-                logMessage:
-                  type: string
-                reflogEmail:
-                  type: string
-                reflogName:
-                  type: string
-              type: object
             duration:
               format: int32
               type: integer
@@ -102,6 +110,12 @@ spec:
               format: date-time
               type: string
             message:
+              type: string
+            pendingDuration:
+              format: int32
+              type: integer
+            pendingStartedTime:
+              format: date-time
               type: string
             phase:
               type: string
