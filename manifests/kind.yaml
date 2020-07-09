@@ -1,0 +1,506 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: iceci-manager
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: iceci-step
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: iceci-manager
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - pods/log
+  - services
+  - endpoints
+  - persistentvolumeclaims
+  - events
+  - configmaps
+  - secrets
+  verbs:
+  - '*'
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  - daemonsets
+  - replicasets
+  - statefulsets
+  verbs:
+  - '*'
+- apiGroups:
+  - batch
+  resources:
+  - cronjobs
+  - jobs
+  verbs:
+  - '*'
+- apiGroups:
+  - apps
+  resourceNames:
+  - iceci-operator
+  resources:
+  - deployments/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - iceci.io
+  resources:
+  - '*'
+  verbs:
+  - '*'
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: iceci-step
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - patch
+  - get
+  - create
+  - delete
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: iceci-manager
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: iceci-manager
+subjects:
+- kind: ServiceAccount
+  name: iceci-manager
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: iceci-step
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: iceci-step
+subjects:
+- kind: ServiceAccount
+  name: iceci-step
+---
+apiVersion: v1
+data:
+  ICECI_DEFAULT_IMAGE_BUILDER: buildkit
+  ICECI_DYNAMIC_PVC: iceci-dynamic
+  ICECI_IMAGE_BUILDKIT: moby/buildkit:v0.7.1
+  ICECI_IMAGE_KANIKO: gcr.io/kaniko-project/executor:v0.16.0
+  ICECI_IMAGE_UTILS: iceci/utils
+  ICECI_SHARED_PVC: iceci-shared
+kind: ConfigMap
+metadata:
+  name: iceci-operator-72bf4b55k2
+---
+apiVersion: v1
+data:
+  default.conf: |
+    server {
+        listen       80;
+        server_name  localhost;
+
+        location /api/ {
+            proxy_pass http://localhost:8000;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header Host $host;
+            proxy_redirect off;
+        }
+
+        location / {
+            root   /usr/share/nginx/html;
+            index  index.html index.htm;
+            try_files $uri $uri/ /index.html;
+        }
+
+        error_page   500 502 503 504  /50x.html;
+        location = /50x.html {
+            root   /usr/share/nginx/html;
+        }
+    }
+kind: ConfigMap
+metadata:
+  name: iceci-ui-config-c7ffdhcht7
+---
+apiVersion: v1
+data:
+  DB: aWNlY2k=
+  DIALECT: cG9zdGdyZXM=
+  HOST: aWNlY2ktZGI=
+  PASSWORD: aWNlY2k=
+  PORT: NTQzMg==
+  USER: aWNlY2k=
+kind: Secret
+metadata:
+  name: iceci-db-settings-42thtcch2c
+type: Opaque
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: iceci
+    name: iceci-db
+  name: iceci-db
+spec:
+  ports:
+  - name: postgres
+    port: 5432
+    targetPort: postgres
+  selector:
+    app: iceci
+    name: iceci-db
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: iceci
+    name: iceci-web
+  name: iceci-web
+spec:
+  ports:
+  - name: http
+    port: 80
+    targetPort: http
+  selector:
+    app: iceci
+    name: iceci-web
+  type: NodePort
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iceci-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iceci
+      name: iceci-operator
+  template:
+    metadata:
+      labels:
+        app: iceci
+        name: iceci-operator
+      name: postgres
+    spec:
+      containers:
+      - env:
+        - name: ICECI_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: OPERATOR_NAME
+          value: iceci-operator
+        - name: STEP_SERVICE_ACCOUNT
+          value: iceci-step
+        envFrom:
+        - configMapRef:
+            name: iceci-operator-72bf4b55k2
+        image: iceci/iceci-operator:alpha6
+        imagePullPolicy: Always
+        name: iceci-operator
+      serviceAccountName: iceci-manager
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: iceci
+    name: iceci-sync
+  name: iceci-sync
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iceci
+      name: iceci-sync
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: iceci
+        name: iceci-sync
+      name: iceci-sync
+    spec:
+      containers:
+      - env:
+        - name: ICECI_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: OPERATOR_NAME
+          value: iceci-sync
+        - name: ICECI_DB_DIALECT
+          valueFrom:
+            secretKeyRef:
+              key: DIALECT
+              name: iceci-db-settings-42thtcch2c
+        - name: ICECI_DB_PORT
+          valueFrom:
+            secretKeyRef:
+              key: PORT
+              name: iceci-db-settings-42thtcch2c
+        - name: ICECI_DB_HOST
+          valueFrom:
+            secretKeyRef:
+              key: HOST
+              name: iceci-db-settings-42thtcch2c
+        - name: ICECI_DB_PASS
+          valueFrom:
+            secretKeyRef:
+              key: PASSWORD
+              name: iceci-db-settings-42thtcch2c
+        - name: ICECI_DB_USER
+          valueFrom:
+            secretKeyRef:
+              key: USER
+              name: iceci-db-settings-42thtcch2c
+        - name: ICECI_DB_NAME
+          valueFrom:
+            secretKeyRef:
+              key: DB
+              name: iceci-db-settings-42thtcch2c
+        image: iceci/iceci-sync:alpha6
+        imagePullPolicy: Always
+        name: iceci-sync
+      restartPolicy: Always
+      serviceAccountName: iceci-manager
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: iceci
+    name: iceci-web
+  name: iceci-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iceci
+      name: iceci-web
+  template:
+    metadata:
+      labels:
+        app: iceci
+        name: iceci-web
+      name: iceci-web
+    spec:
+      containers:
+      - image: iceci/iceci-ui:alpha6
+        imagePullPolicy: Always
+        name: iceci-ui
+        ports:
+        - containerPort: 80
+          name: http
+        volumeMounts:
+        - mountPath: /etc/nginx/conf.d/
+          name: nginx-config
+      - env:
+        - name: ICECI_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: ICECI_DB_DIALECT
+          valueFrom:
+            secretKeyRef:
+              key: DIALECT
+              name: iceci-db-settings-42thtcch2c
+        - name: ICECI_DB_PORT
+          valueFrom:
+            secretKeyRef:
+              key: PORT
+              name: iceci-db-settings-42thtcch2c
+        - name: ICECI_DB_HOST
+          valueFrom:
+            secretKeyRef:
+              key: HOST
+              name: iceci-db-settings-42thtcch2c
+        - name: ICECI_DB_PASS
+          valueFrom:
+            secretKeyRef:
+              key: PASSWORD
+              name: iceci-db-settings-42thtcch2c
+        - name: ICECI_DB_USER
+          valueFrom:
+            secretKeyRef:
+              key: USER
+              name: iceci-db-settings-42thtcch2c
+        - name: ICECI_DB_NAME
+          valueFrom:
+            secretKeyRef:
+              key: DB
+              name: iceci-db-settings-42thtcch2c
+        image: iceci/iceci-api:alpha6
+        imagePullPolicy: Always
+        name: iceci-api
+      restartPolicy: Always
+      serviceAccountName: iceci-manager
+      volumes:
+      - configMap:
+          name: iceci-ui-config-c7ffdhcht7
+        name: nginx-config
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: iceci
+    name: iceci-db
+  name: iceci-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iceci
+      name: iceci-db
+  serviceName: iceci-db
+  template:
+    metadata:
+      labels:
+        app: iceci
+        name: iceci-db
+      name: iceci-db
+    spec:
+      containers:
+      - env:
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: PASSWORD
+              name: iceci-db-settings-42thtcch2c
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              key: USER
+              name: iceci-db-settings-42thtcch2c
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              key: DB
+              name: iceci-db-settings-42thtcch2c
+        image: postgres:11
+        imagePullPolicy: IfNotPresent
+        name: iceci-db
+        ports:
+        - containerPort: 5432
+          name: postgres
+        volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          name: pgdata
+      restartPolicy: Always
+      volumes:
+      - emptyDir: {}
+        name: pgdata
+---
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: iceci
+spec:
+  rules:
+  - host: iceci.local
+    http:
+      paths:
+      - backend:
+          serviceName: iceci-ui
+          servicePort: 80
+        path: /
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  labels:
+    name: iceci-dynamic
+  name: iceci-dynamic
+spec:
+  accessModes:
+  - ReadWriteMany
+  capacity:
+    storage: 1Gi
+  hostPath:
+    path: /iceci/dynamic
+  storageClassName: ""
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  labels:
+    name: iceci-shared
+  name: iceci-shared
+spec:
+  accessModes:
+  - ReadWriteMany
+  capacity:
+    storage: 1Gi
+  hostPath:
+    path: /iceci/shared
+  storageClassName: ""
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: iceci-dynamic
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+  selector:
+    matchLabels:
+      name: iceci-dynamic
+  storageClassName: ""
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: iceci-postgres-pvc
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: iceci-shared
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+  selector:
+    matchLabels:
+      name: iceci-shared
+  storageClassName: ""

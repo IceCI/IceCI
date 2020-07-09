@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name:  iceci-db
+  labels:
+    app: iceci
+    name: iceci-db
+spec:
+  serviceName: iceci-db
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iceci
+      name: iceci-db
+  template:
+    metadata:
+      name:  iceci-db
+      labels:
+        app: iceci
+        name: iceci-db
+    spec:
+      restartPolicy: Always
+      containers:
+      - name: iceci-db
+        image: postgres:11
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: iceci-db-settings
+              key: PASSWORD
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: iceci-db-settings
+              key: USER
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: iceci-db-settings
+              key: DB
+        ports:
+        - containerPort: 5432
+          name: postgres
+        volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          name: pgdata
+      volumes:
+      - name: pgdata
+        emptyDir: {}
+
+

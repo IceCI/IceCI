@@ -1,0 +1,531 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.3.0
+  creationTimestamp: null
+  name: pipelines.iceci.io
+spec:
+  group: iceci.io
+  names:
+    kind: Pipeline
+    listKind: PipelineList
+    plural: pipelines
+    singular: pipeline
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - description: Age
+      format: date-time
+      jsonPath: .metadata.creationTimestamp
+      name: age
+      type: date
+    - description: Phase
+      format: byte
+      jsonPath: .status.phase
+      name: phase
+      type: string
+    - description: Stage
+      format: byte
+      jsonPath: .status.stage
+      name: stage
+      type: string
+    - description: Current step
+      format: int32
+      jsonPath: .status.currentStep
+      name: s
+      type: integer
+    - description: Current failure handler
+      format: int32
+      jsonPath: .status.currentFailureHandler
+      name: fh
+      type: integer
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            type: object
+            required:
+            - pipelineSpec
+            properties:
+              pipelineSpec:
+                type: object
+                properties:
+                  failureHandlers:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                      - image
+                      - name
+                      properties:
+                        envFromSecret:
+                          type: array
+                          items:
+                            type: object
+                            required:
+                            - objectName
+                            properties:
+                              envName:
+                                description: Name of environment variable
+                                type: string
+                              objectKey:
+                                description: Key in config map or secret
+                                type: string
+                              objectName:
+                                description: Name of config map or secret
+                                type: string
+                        environment:
+                          type: array
+                          items:
+                            type: object
+                            required:
+                            - name
+                            properties:
+                              fromSecret:
+                                type: string
+                              name:
+                                type: string
+                              value:
+                                type: string
+                        files:
+                          type: array
+                          items:
+                            type: object
+                            required:
+                            - fromSecret
+                            - path
+                            properties:
+                              fromSecret:
+                                type: string
+                              path:
+                                type: string
+                        image:
+                          type: string
+                        imagePullSecret:
+                          type: string
+                        name:
+                          type: string
+                          pattern: ^[a-z]+[a-z\-_0-9]+$
+                        script:
+                          type: string
+                  globals:
+                    type: object
+                    properties:
+                      environment:
+                        type: array
+                        items:
+                          type: object
+                          required:
+                          - name
+                          properties:
+                            fromSecret:
+                              type: string
+                            name:
+                              type: string
+                            value:
+                              type: string
+                      files:
+                        type: array
+                        items:
+                          type: object
+                          required:
+                          - fromSecret
+                          - path
+                          properties:
+                            fromSecret:
+                              type: string
+                            path:
+                              type: string
+                      imagePullSecret:
+                        type: string
+                      onFailure:
+                        type: array
+                        items:
+                          type: object
+                          required:
+                          - handlerName
+                          properties:
+                            handlerName:
+                              type: string
+                      runtimeProfile:
+                        type: string
+                  pipelineContext:
+                    type: object
+                    additionalProperties:
+                      type: string
+                  services:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                      - image
+                      - name
+                      properties:
+                        envFromSecret:
+                          type: array
+                          items:
+                            type: object
+                            required:
+                            - objectName
+                            properties:
+                              envName:
+                                description: Name of environment variable
+                                type: string
+                              objectKey:
+                                description: Key in config map or secret
+                                type: string
+                              objectName:
+                                description: Name of config map or secret
+                                type: string
+                        environment:
+                          type: array
+                          items:
+                            type: object
+                            required:
+                            - name
+                            properties:
+                              fromSecret:
+                                type: string
+                              name:
+                                type: string
+                              value:
+                                type: string
+                        image:
+                          type: string
+                        imagePullSecret:
+                          type: string
+                        name:
+                          type: string
+                          pattern: ^[a-z]+[a-z\-_0-9]+$
+                        onFailure:
+                          type: array
+                          items:
+                            type: object
+                            required:
+                            - handlerName
+                            properties:
+                              handlerName:
+                                type: string
+                        script:
+                          type: string
+                  steps:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                      - name
+                      properties:
+                        containerBuild:
+                          type: object
+                          required:
+                          - imageBuildSecret
+                          - imageName
+                          - tags
+                          - user
+                          properties:
+                            buildArgs:
+                              type: array
+                              items:
+                                type: object
+                                required:
+                                - name
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                            cache:
+                              description: Cache settings
+                              type: object
+                              properties:
+                                enable:
+                                  type: boolean
+                                registry:
+                                  type: string
+                            contextPath:
+                              description: Path relative to workspace directory
+                              type: string
+                            dockerfilePath:
+                              description: Path relative to workspace directory
+                              type: string
+                            imageBuildSecret:
+                              type: string
+                            imageName:
+                              type: string
+                            registry:
+                              type: string
+                            tags:
+                              type: array
+                              minItems: 1
+                              items:
+                                type: string
+                            user:
+                              type: string
+                        name:
+                          type: string
+                          pattern: ^[a-z]+[a-z\-_0-9]+$
+                        onFailure:
+                          type: array
+                          items:
+                            type: object
+                            required:
+                            - handlerName
+                            properties:
+                              handlerName:
+                                type: string
+                        runtimeProfile:
+                          type: string
+                        serviceRun:
+                          type: object
+                          required:
+                          - image
+                          - name
+                          properties:
+                            envFromSecret:
+                              type: array
+                              items:
+                                type: object
+                                required:
+                                - objectName
+                                properties:
+                                  envName:
+                                    description: Name of environment variable
+                                    type: string
+                                  objectKey:
+                                    description: Key in config map or secret
+                                    type: string
+                                  objectName:
+                                    description: Name of config map or secret
+                                    type: string
+                            environment:
+                              type: array
+                              items:
+                                type: object
+                                required:
+                                - name
+                                properties:
+                                  fromSecret:
+                                    type: string
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                            files:
+                              type: array
+                              items:
+                                type: object
+                                required:
+                                - fromSecret
+                                - path
+                                properties:
+                                  fromSecret:
+                                    type: string
+                                  path:
+                                    type: string
+                            image:
+                              type: string
+                            imagePullSecret:
+                              type: string
+                            name:
+                              type: string
+                              pattern: ^[a-z]+[a-z\-_0-9]+$
+                            script:
+                              type: string
+                        simpleStep:
+                          type: object
+                          required:
+                          - image
+                          properties:
+                            envFromSecret:
+                              type: array
+                              items:
+                                type: object
+                                required:
+                                - objectName
+                                properties:
+                                  envName:
+                                    description: Name of environment variable
+                                    type: string
+                                  objectKey:
+                                    description: Key in config map or secret
+                                    type: string
+                                  objectName:
+                                    description: Name of config map or secret
+                                    type: string
+                            environment:
+                              type: array
+                              items:
+                                type: object
+                                required:
+                                - name
+                                properties:
+                                  fromSecret:
+                                    type: string
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                            files:
+                              type: array
+                              items:
+                                type: object
+                                required:
+                                - fromSecret
+                                - path
+                                properties:
+                                  fromSecret:
+                                    type: string
+                                  path:
+                                    type: string
+                            image:
+                              type: string
+                            imagePullSecret:
+                              type: string
+                            script:
+                              type: string
+                  workingDir:
+                    type: string
+              volumeMounts:
+                type: array
+                items:
+                  type: object
+                  required:
+                  - name
+                  - pvcName
+                  properties:
+                    name:
+                      type: string
+                    path:
+                      type: string
+                    pvcName:
+                      type: string
+                    subPath:
+                      type: string
+          status:
+            type: object
+            properties:
+              currentFailureHandler:
+                type: integer
+                format: int32
+              currentStep:
+                type: integer
+                format: int32
+              duration:
+                type: integer
+                format: int32
+              failureHandlerReferences:
+                type: array
+                items:
+                  type: object
+                  required:
+                  - handlerName
+                  properties:
+                    handlerName:
+                      type: string
+              failureHandlerStatuses:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    duration:
+                      type: integer
+                      format: int32
+                    finishedTime:
+                      type: string
+                      format: date-time
+                    initializedTime:
+                      type: string
+                      format: date-time
+                    message:
+                      type: string
+                    name:
+                      type: string
+                      pattern: ^[a-z]+[a-z\-_0-9]+$
+                    phase:
+                      type: string
+                    reason:
+                      type: string
+                    resourceName:
+                      type: string
+              finishedTime:
+                type: string
+                format: date-time
+              initializedTime:
+                type: string
+                format: date-time
+              message:
+                type: string
+              phase:
+                type: string
+              reason:
+                type: string
+              serviceStatuses:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                    name:
+                      type: string
+                      pattern: ^[a-z]+[a-z\-_0-9]+$
+                    phase:
+                      type: string
+                    podIP:
+                      type: string
+                    reason:
+                      type: string
+                    resourceName:
+                      type: string
+              stage:
+                type: string
+              stepStatuses:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    duration:
+                      type: integer
+                      format: int32
+                    finishedTime:
+                      type: string
+                      format: date-time
+                    initializedTime:
+                      type: string
+                      format: date-time
+                    message:
+                      type: string
+                    name:
+                      type: string
+                      pattern: ^[a-z]+[a-z\-_0-9]+$
+                    phase:
+                      type: string
+                    reason:
+                      type: string
+                    resourceName:
+                      type: string
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

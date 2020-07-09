@@ -1,0 +1,167 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.3.0
+  creationTimestamp: null
+  name: containerbuildren.iceci.io
+spec:
+  group: iceci.io
+  names:
+    kind: ContainerBuild
+    listKind: ContainerBuildList
+    plural: containerbuildren
+    singular: containerbuild
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - description: Age
+      format: date-time
+      jsonPath: .metadata.creationTimestamp
+      name: age
+      type: date
+    - description: Phase
+      format: byte
+      jsonPath: .status.phase
+      name: phase
+      type: string
+    - description: PodName
+      format: byte
+      jsonPath: .status.podStatus.name
+      name: podname
+      type: string
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            type: object
+            required:
+            - docker
+            - dockerSecret
+            - volumeMounts
+            properties:
+              docker:
+                type: object
+                required:
+                - contextPath
+                - dockerfilePath
+                - imageName
+                - tags
+                - user
+                properties:
+                  buildArgs:
+                    description: Build arguments
+                    type: array
+                    items:
+                      type: object
+                      required:
+                      - name
+                      properties:
+                        name:
+                          type: string
+                        value:
+                          type: string
+                  cache:
+                    description: Image cache options
+                    type: object
+                    properties:
+                      enable:
+                        type: boolean
+                      registry:
+                        type: string
+                  contextPath:
+                    description: Absolute path that will be used as context
+                    type: string
+                  dockerfilePath:
+                    description: Absolute path to the dockerfile
+                    type: string
+                  imageName:
+                    type: string
+                  registry:
+                    type: string
+                  tags:
+                    description: Tags that will be pushed to registry
+                    type: array
+                    minItems: 1
+                    items:
+                      type: string
+                  user:
+                    type: string
+              dockerSecret:
+                type: string
+              runtimeProfile:
+                type: string
+              volumeMounts:
+                type: array
+                items:
+                  type: object
+                  required:
+                  - name
+                  - pvcName
+                  properties:
+                    name:
+                      type: string
+                    path:
+                      type: string
+                    pvcName:
+                      type: string
+                    subPath:
+                      type: string
+          status:
+            type: object
+            properties:
+              duration:
+                type: integer
+                format: int32
+              finishedTime:
+                type: string
+                format: date-time
+              initializedTime:
+                type: string
+                format: date-time
+              message:
+                type: string
+              pendingDuration:
+                type: integer
+                format: int32
+              pendingStartedTime:
+                type: string
+                format: date-time
+              phase:
+                type: string
+              podStatus:
+                type: object
+                properties:
+                  exitCode:
+                    description: Pod main container (at index 0) return code
+                    type: integer
+                    format: int32
+                  name:
+                    description: Name of pod
+                    type: string
+              reason:
+                type: string
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

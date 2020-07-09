@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iceci-web
+  labels:
+    app: iceci
+    name: iceci-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iceci
+      name: iceci-web
+  template:
+    metadata:
+      name: iceci-web
+      labels:
+        app: iceci
+        name: iceci-web
+    spec:
+      restartPolicy: Always
+      serviceAccountName: iceci-manager
+      containers:
+      - name: iceci-ui
+        image: iceci/iceci-ui
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+          name: http
+        volumeMounts:
+        - name: nginx-config
+          mountPath: /etc/nginx/conf.d/
+      - name: iceci-api
+        image: iceci/iceci-api
+        imagePullPolicy: Always
+        env:
+        - name: ICECI_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: ICECI_DB_DIALECT
+          valueFrom:
+            secretKeyRef:
+              key: DIALECT
+              name: iceci-db-settings
+        - name: ICECI_DB_PORT
+          valueFrom:
+            secretKeyRef:
+              key: PORT
+              name: iceci-db-settings
+        - name: ICECI_DB_HOST
+          valueFrom:
+            secretKeyRef:
+              key: HOST
+              name: iceci-db-settings
+        - name: ICECI_DB_PASS
+          valueFrom:
+            secretKeyRef:
+              key: PASSWORD
+              name: iceci-db-settings
+        - name: ICECI_DB_USER
+          valueFrom:
+            secretKeyRef:
+              key: USER
+              name: iceci-db-settings
+        - name: ICECI_DB_NAME
+          valueFrom:
+            secretKeyRef:
+              key: DB
+              name: iceci-db-settings
+      volumes:
+      - name: nginx-config
+        configMap:
+          name: iceci-ui-config

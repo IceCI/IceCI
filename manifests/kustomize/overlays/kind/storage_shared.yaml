@@ -1,0 +1,31 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: iceci-shared
+spec:
+  storageClassName: ""
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+  selector:
+    matchLabels:
+      name: iceci-shared
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: iceci-shared
+  labels:
+    name: iceci-shared
+spec:
+  storageClassName: ""
+  accessModes:
+  - ReadWriteMany
+  capacity:
+    storage: 1Gi
+  hostPath:
+    path: /iceci/shared

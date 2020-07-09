@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iceci-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iceci
+      name: iceci-operator
+  template:
+    metadata:
+      name: postgres
+      labels:
+        app: iceci
+        name: iceci-operator
+    spec:
+      serviceAccountName: iceci-manager
+      containers:
+      - name: iceci-operator
+        image: iceci/iceci-operator
+        imagePullPolicy: Always
+        env:
+        - name: ICECI_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: OPERATOR_NAME
+          value: iceci-operator
+        - name: STEP_SERVICE_ACCOUNT
+          value: iceci-step
+        envFrom:
+        - configMapRef:
+            name: iceci-operator
