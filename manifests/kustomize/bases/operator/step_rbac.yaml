@@ -1,0 +1,27 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: iceci-step
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - patch
+  - get
+  - create
+  - delete
+
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: iceci-step
+subjects:
+- kind: ServiceAccount
+  name: iceci-step
+roleRef:
+  kind: Role
+  name: iceci-step
+  apiGroup: rbac.authorization.k8s.io

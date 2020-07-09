@@ -1,0 +1,11 @@
+resources:
+- iceci.io_workspaces.yaml
+- iceci.io_gitclones.yaml
+- iceci.io_backingservices.yaml
+- iceci.io_containerbuildren.yaml
+- iceci.io_containerruns.yaml
+- iceci.io_repositories.yaml
+- iceci.io_gitwatchers.yaml
+- iceci.io_gitpipelines.yaml
+- iceci.io_pipelines.yaml
+- iceci.io_runtimeprofiles.yaml

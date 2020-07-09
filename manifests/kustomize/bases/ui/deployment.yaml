@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iceci-ui
+  labels:
+    app: iceci
+    name: iceci-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iceci
+      name: iceci-ui
+  template:
+    metadata:
+      name: iceci-ui
+      labels:
+        app: iceci
+        name: iceci-ui
+    spec:
+      restartPolicy: Always
+      containers:
+      - name: iceci-ui
+        image: iceci/iceci-ui
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+          name: http

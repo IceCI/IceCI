@@ -1,0 +1,9 @@
+secretGenerator:
+- name: iceci-db-settings
+  literals:
+  - PASSWORD=iceci
+  - DB=iceci
+  - USER=iceci
+  - HOST=iceci-db
+  - PORT=5432
+  - DIALECT=postgres

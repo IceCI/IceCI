@@ -1,0 +1,28 @@
+bases:
+- ../../bases/rbac
+- ../../bases/operator
+- ../../bases/dbsettings
+- ../../bases/postgres
+- ../../bases/sync
+- ../../bases/web
+
+resources:
+- postgres_pvc.yaml
+- storage_dynamic.yaml
+- storage_shared.yaml
+- ingress.yaml
+
+images:
+- name: iceci/iceci-operator
+  newTag: alpha6
+- name: iceci/iceci-sync
+  newTag: alpha6
+- name: iceci/iceci-api
+  newTag: alpha6
+- name: iceci/iceci-ui
+  newTag: alpha6
+
+
+patchesStrategicMerge:
+- postgres_pvc.yaml
+- web_service_patch.yaml
