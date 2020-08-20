@@ -98,15 +98,12 @@ subjects:
 ---
 apiVersion: v1
 data:
-  ICECI_DEFAULT_IMAGE_BUILDER: buildkit
-  ICECI_DYNAMIC_PVC: iceci-dynamic
   ICECI_IMAGE_BUILDKIT: moby/buildkit:v0.7.1
-  ICECI_IMAGE_KANIKO: gcr.io/kaniko-project/executor:v0.16.0
   ICECI_IMAGE_UTILS: iceci/utils
-  ICECI_SHARED_PVC: iceci-shared
+  ICECI_WORKSPACE_PVC: iceci-dynamic
 kind: ConfigMap
 metadata:
-  name: iceci-operator-72bf4b55k2
+  name: iceci-operator-ktg587ch89
 ---
 apiVersion: v1
 data:
@@ -217,8 +214,8 @@ spec:
           value: iceci-step
         envFrom:
         - configMapRef:
-            name: iceci-operator-72bf4b55k2
-        image: iceci/iceci-operator:alpha6
+            name: iceci-operator-ktg587ch89
+        image: iceci/iceci-operator:alpha7
         imagePullPolicy: Always
         name: iceci-operator
       serviceAccountName: iceci-manager
@@ -287,7 +284,7 @@ spec:
             secretKeyRef:
               key: DB
               name: iceci-db-settings-42thtcch2c
-        image: iceci/iceci-sync:alpha6
+        image: iceci/iceci-sync:alpha7
         imagePullPolicy: Always
         name: iceci-sync
       restartPolicy: Always
@@ -314,7 +311,7 @@ spec:
       name: iceci-web
     spec:
       containers:
-      - image: iceci/iceci-ui:alpha6
+      - image: iceci/iceci-ui:alpha7
         imagePullPolicy: Always
         name: iceci-ui
         ports:
@@ -358,7 +355,7 @@ spec:
             secretKeyRef:
               key: DB
               name: iceci-db-settings-42thtcch2c
-        image: iceci/iceci-api:alpha6
+        image: iceci/iceci-api:alpha7
         imagePullPolicy: Always
         name: iceci-api
       restartPolicy: Always

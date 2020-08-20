@@ -19,8 +19,28 @@ spec:
       format: byte
       jsonPath: .status.phase
       name: phase
-      priority: 1
       type: string
+    - description: Service name
+      format: byte
+      jsonPath: .spec.serviceName
+      name: servicename
+      type: string
+    - description: PodName
+      format: byte
+      jsonPath: .status.podStatus.name
+      name: podname
+      type: string
+    - description: ExitWithError code
+      format: int32
+      jsonPath: .status.podStatus.exitCode
+      name: exitCode
+      priority: 1
+      type: integer
+    - description: Age
+      format: date-time
+      jsonPath: .metadata.creationTimestamp
+      name: age
+      type: date
     name: v1alpha1
     schema:
       openAPIV3Schema:
@@ -155,11 +175,6 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - description: Age
-      format: date-time
-      jsonPath: .metadata.creationTimestamp
-      name: age
-      type: date
     - description: Phase
       format: byte
       jsonPath: .status.phase
@@ -170,6 +185,11 @@ spec:
       jsonPath: .status.podStatus.name
       name: podname
       type: string
+    - description: Age
+      format: date-time
+      jsonPath: .metadata.creationTimestamp
+      name: age
+      type: date
     name: v1alpha1
     schema:
       openAPIV3Schema:
@@ -323,11 +343,6 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - description: Age
-      format: date-time
-      jsonPath: .metadata.creationTimestamp
-      name: age
-      type: date
     - description: Phase
       format: byte
       jsonPath: .status.phase
@@ -345,6 +360,11 @@ spec:
       name: exitCode
       priority: 1
       type: integer
+    - description: Age
+      format: date-time
+      jsonPath: .metadata.creationTimestamp
+      name: age
+      type: date
     name: v1alpha1
     schema:
       openAPIV3Schema:
@@ -500,6 +520,11 @@ spec:
       jsonPath: .status.phase
       name: phase
       type: string
+    - description: Age
+      format: date-time
+      jsonPath: .metadata.creationTimestamp
+      name: age
+      type: date
     name: v1alpha1
     schema:
       openAPIV3Schema:
@@ -527,6 +552,9 @@ spec:
                       secret:
                         type: string
                       type:
+                        enum:
+                        - token
+                        - ssh
                         type: string
                     required:
                     - secret
@@ -628,16 +656,16 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - description: Age
-      format: date-time
-      jsonPath: .metadata.creationTimestamp
-      name: age
-      type: date
     - description: Phase
       format: byte
       jsonPath: .status.phase
       name: phase
       type: string
+    - description: Age
+      format: date-time
+      jsonPath: .metadata.creationTimestamp
+      name: age
+      type: date
     name: v1alpha1
     schema:
       openAPIV3Schema:
@@ -656,33 +684,50 @@ spec:
             type: object
           spec:
             properties:
+              auth:
+                properties:
+                  secret:
+                    type: string
+                  type:
+                    enum:
+                    - token
+                    - ssh
+                    type: string
+                required:
+                - secret
+                - type
+                type: object
               context:
                 additionalProperties:
                   type: string
                 type: object
-              git:
+              event:
                 properties:
-                  auth:
-                    properties:
-                      secret:
-                        type: string
-                      type:
-                        type: string
-                    required:
-                    - secret
-                    - type
-                    type: object
-                  checkout:
+                  name:
+                    description: Name of pr or tag, and if type is commit, then name
+                      of branch
                     type: string
-                  repositoryURL:
+                  sha:
+                    description: SHA of object
+                    type: string
+                  type:
+                    enum:
+                    - commit
+                    - tag
+                    - pr
                     type: string
                 required:
-                - repositoryURL
+                - name
+                - sha
+                - type
                 type: object
               pipelineFilePath:
                 type: string
+              repositoryURL:
+                type: string
             required:
-            - git
+            - event
+            - repositoryURL
             type: object
           status:
             properties:
@@ -725,6 +770,8 @@ spec:
               resourceNames:
                 properties:
                   gitClone:
+                    type: string
+                  pipeline:
                     type: string
                   pipelineConfigMap:
                     type: string
@@ -771,7 +818,18 @@ spec:
     singular: gitwatcher
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - description: Phase
+      format: byte
+      jsonPath: .status.phase
+      name: phase
+      type: string
+    - description: Age
+      format: date-time
+      jsonPath: .metadata.creationTimestamp
+      name: age
+      type: date
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         properties:
@@ -796,6 +854,9 @@ spec:
                       secret:
                         type: string
                       type:
+                        enum:
+                        - token
+                        - ssh
                         type: string
                     required:
                     - secret
@@ -806,10 +867,6 @@ spec:
                 required:
                 - repositoryURL
                 type: object
-              orphanPipelines:
-                type: boolean
-              pipelineFilePath:
-                type: string
               schedule:
                 type: string
             required:
@@ -970,6 +1027,10 @@ spec:
             properties:
               pipelineSpec:
                 properties:
+                  context:
+                    additionalProperties:
+                      type: string
+                    type: object
                   failureHandlers:
                     items:
                       properties:
@@ -1068,10 +1129,6 @@ spec:
                         type: array
                       runtimeProfile:
                         type: string
-                    type: object
-                  pipelineContext:
-                    additionalProperties:
-                      type: string
                     type: object
                   services:
                     items:
@@ -1177,6 +1234,58 @@ spec:
                           - tags
                           - user
                           type: object
+                        containerRun:
+                          properties:
+                            envFromSecret:
+                              items:
+                                properties:
+                                  envName:
+                                    description: Name of environment variable
+                                    type: string
+                                  objectKey:
+                                    description: Key in config map or secret
+                                    type: string
+                                  objectName:
+                                    description: Name of config map or secret
+                                    type: string
+                                required:
+                                - objectName
+                                type: object
+                              type: array
+                            environment:
+                              items:
+                                properties:
+                                  fromSecret:
+                                    type: string
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                required:
+                                - name
+                                type: object
+                              type: array
+                            files:
+                              items:
+                                properties:
+                                  fromSecret:
+                                    type: string
+                                  path:
+                                    type: string
+                                required:
+                                - fromSecret
+                                - path
+                                type: object
+                              type: array
+                            image:
+                              type: string
+                            imagePullSecret:
+                              type: string
+                            script:
+                              type: string
+                          required:
+                          - image
+                          type: object
                         name:
                           pattern: ^[a-z]+[a-z\-_0-9]+$
                           type: string
@@ -1247,57 +1356,11 @@ spec:
                           - image
                           - name
                           type: object
-                        simpleStep:
+                        waitForAccept:
                           properties:
-                            envFromSecret:
-                              items:
-                                properties:
-                                  envName:
-                                    description: Name of environment variable
-                                    type: string
-                                  objectKey:
-                                    description: Key in config map or secret
-                                    type: string
-                                  objectName:
-                                    description: Name of config map or secret
-                                    type: string
-                                required:
-                                - objectName
-                                type: object
-                              type: array
-                            environment:
-                              items:
-                                properties:
-                                  fromSecret:
-                                    type: string
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                required:
-                                - name
-                                type: object
-                              type: array
-                            files:
-                              items:
-                                properties:
-                                  fromSecret:
-                                    type: string
-                                  path:
-                                    type: string
-                                required:
-                                - fromSecret
-                                - path
-                                type: object
-                              type: array
-                            image:
-                              type: string
-                            imagePullSecret:
-                              type: string
-                            script:
-                              type: string
-                          required:
-                          - image
+                            timeout:
+                              format: int32
+                              type: integer
                           type: object
                       required:
                       - name
@@ -1333,6 +1396,8 @@ spec:
               currentStep:
                 format: int32
                 type: integer
+              currentStepType:
+                type: string
               duration:
                 format: int32
                 type: integer
@@ -1456,7 +1521,18 @@ spec:
     singular: repository
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - description: Phase
+      format: byte
+      jsonPath: .status.phase
+      name: phase
+      type: string
+    - description: Age
+      format: date-time
+      jsonPath: .metadata.creationTimestamp
+      name: age
+      type: date
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         properties:
@@ -1481,6 +1557,9 @@ spec:
                       secret:
                         type: string
                       type:
+                        enum:
+                        - token
+                        - ssh
                         type: string
                     required:
                     - secret
@@ -1491,6 +1570,8 @@ spec:
                 required:
                 - repositoryURL
                 type: object
+              isBuildingPaused:
+                type: boolean
               orphanPipelines:
                 type: boolean
               pipelineFilePath:
@@ -1608,16 +1689,16 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - description: Age
-      format: date-time
-      jsonPath: .metadata.creationTimestamp
-      name: age
-      type: date
     - description: State
       format: byte
       jsonPath: .status.state
       name: state
       type: string
+    - description: Age
+      format: date-time
+      jsonPath: .metadata.creationTimestamp
+      name: age
+      type: date
     name: v1alpha1
     schema:
       openAPIV3Schema:
@@ -1641,10 +1722,10 @@ spec:
                   type: string
                 type: object
               imageBuilder:
-                enum:
-                - kaniko
-                - buildkit
-                type: string
+                properties:
+                  localCachePath:
+                    type: string
+                type: object
               labels:
                 additionalProperties:
                   type: string
@@ -1708,6 +1789,93 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.3.0
   creationTimestamp: null
+  name: waits.iceci.io
+spec:
+  group: iceci.io
+  names:
+    kind: Wait
+    listKind: WaitList
+    plural: waits
+    singular: wait
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - description: Phase
+      format: byte
+      jsonPath: .status.phase
+      name: phase
+      type: string
+    - description: Age
+      format: date-time
+      jsonPath: .metadata.creationTimestamp
+      name: age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              timeout:
+                format: int32
+                type: integer
+            type: object
+          status:
+            properties:
+              configMapName:
+                type: string
+              duration:
+                format: int32
+                type: integer
+              finishedTime:
+                format: date-time
+                type: string
+              initializedTime:
+                format: date-time
+                type: string
+              message:
+                type: string
+              pendingDuration:
+                format: int32
+                type: integer
+              pendingStartedTime:
+                format: date-time
+                type: string
+              phase:
+                type: string
+              reason:
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.3.0
+  creationTimestamp: null
   name: workspaces.iceci.io
 spec:
   group: iceci.io
@@ -1734,6 +1902,11 @@ spec:
       jsonPath: .status.volume.subPath
       name: subpath
       type: string
+    - description: Age
+      format: date-time
+      jsonPath: .metadata.creationTimestamp
+      name: age
+      type: date
     name: v1alpha1
     schema:
       openAPIV3Schema:
@@ -1752,14 +1925,6 @@ spec:
           metadata:
             type: object
           spec:
-            properties:
-              storageType:
-                enum:
-                - dynamic
-                - shared
-                type: string
-            required:
-            - storageType
             type: object
           status:
             properties:

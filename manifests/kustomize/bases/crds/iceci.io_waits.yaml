@@ -4,14 +4,14 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.3.0
   creationTimestamp: null
-  name: gitclones.iceci.io
+  name: waits.iceci.io
 spec:
   group: iceci.io
   names:
-    kind: GitClone
-    listKind: GitCloneList
-    plural: gitclones
-    singular: gitclone
+    kind: Wait
+    listKind: WaitList
+    plural: waits
+    singular: wait
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
@@ -44,65 +44,15 @@ spec:
             type: object
           spec:
             type: object
-            required:
-            - git
-            - volume
             properties:
-              getMetadata:
-                type: boolean
-              git:
-                type: object
-                required:
-                - repositoryURL
-                properties:
-                  auth:
-                    type: object
-                    required:
-                    - secret
-                    - type
-                    properties:
-                      secret:
-                        type: string
-                      type:
-                        type: string
-                        enum:
-                        - token
-                        - ssh
-                  checkout:
-                    type: string
-                  repositoryURL:
-                    type: string
-              volume:
-                type: object
-                required:
-                - pvcName
-                properties:
-                  pvcName:
-                    type: string
-                  subPath:
-                    type: string
+              timeout:
+                type: integer
+                format: int32
           status:
             type: object
             properties:
-              checkoutMetadata:
-                type: object
-                properties:
-                  authorDate:
-                    type: string
-                  authorEmail:
-                    type: string
-                  authorName:
-                    type: string
-                  commitHash:
-                    type: string
-                  logHeader:
-                    type: string
-                  logMessage:
-                    type: string
-                  reflogEmail:
-                    type: string
-                  reflogName:
-                    type: string
+              configMapName:
+                type: string
               duration:
                 type: integer
                 format: int32
@@ -114,18 +64,14 @@ spec:
                 format: date-time
               message:
                 type: string
+              pendingDuration:
+                type: integer
+                format: int32
+              pendingStartedTime:
+                type: string
+                format: date-time
               phase:
                 type: string
-              podStatus:
-                type: object
-                properties:
-                  exitCode:
-                    description: Pod main container (at index 0) return code
-                    type: integer
-                    format: int32
-                  name:
-                    description: Name of pod
-                    type: string
               reason:
                 type: string
     served: true

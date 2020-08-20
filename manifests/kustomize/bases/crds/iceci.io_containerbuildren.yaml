@@ -15,11 +15,6 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - description: Age
-      format: date-time
-      jsonPath: .metadata.creationTimestamp
-      name: age
-      type: date
     - description: Phase
       format: byte
       jsonPath: .status.phase
@@ -30,6 +25,11 @@ spec:
       jsonPath: .status.podStatus.name
       name: podname
       type: string
+    - description: Age
+      format: date-time
+      jsonPath: .metadata.creationTimestamp
+      name: age
+      type: date
     name: v1alpha1
     schema:
       openAPIV3Schema:

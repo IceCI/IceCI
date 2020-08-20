@@ -7,9 +7,6 @@ resources:
 configMapGenerator:
 - name: iceci-operator
   literals:
-  - ICECI_SHARED_PVC=iceci-shared
-  - ICECI_DYNAMIC_PVC=iceci-dynamic
+  - ICECI_WORKSPACE_PVC=iceci-dynamic
   - ICECI_IMAGE_UTILS=iceci/utils
   - ICECI_IMAGE_BUILDKIT=moby/buildkit:v0.7.1
-  - ICECI_IMAGE_KANIKO=gcr.io/kaniko-project/executor:v0.16.0
-  - ICECI_DEFAULT_IMAGE_BUILDER=buildkit

@@ -19,8 +19,28 @@ spec:
       format: byte
       jsonPath: .status.phase
       name: phase
-      priority: 1
       type: string
+    - description: Service name
+      format: byte
+      jsonPath: .spec.serviceName
+      name: servicename
+      type: string
+    - description: PodName
+      format: byte
+      jsonPath: .status.podStatus.name
+      name: podname
+      type: string
+    - description: ExitWithError code
+      format: int32
+      jsonPath: .status.podStatus.exitCode
+      name: exitCode
+      priority: 1
+      type: integer
+    - description: Age
+      format: date-time
+      jsonPath: .metadata.creationTimestamp
+      name: age
+      type: date
     name: v1alpha1
     schema:
       openAPIV3Schema:

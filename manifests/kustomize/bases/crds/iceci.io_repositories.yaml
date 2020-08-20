@@ -14,7 +14,18 @@ spec:
     singular: repository
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - description: Phase
+      format: byte
+      jsonPath: .status.phase
+      name: phase
+      type: string
+    - description: Age
+      format: date-time
+      jsonPath: .metadata.creationTimestamp
+      name: age
+      type: date
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         type: object
@@ -51,8 +62,13 @@ spec:
                         type: string
                       type:
                         type: string
+                        enum:
+                        - token
+                        - ssh
                   repositoryURL:
                     type: string
+              isBuildingPaused:
+                type: boolean
               orphanPipelines:
                 type: boolean
               pipelineFilePath:

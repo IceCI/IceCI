@@ -65,6 +65,10 @@ spec:
               pipelineSpec:
                 type: object
                 properties:
+                  context:
+                    type: object
+                    additionalProperties:
+                      type: string
                   failureHandlers:
                     type: array
                     items:
@@ -164,10 +168,6 @@ spec:
                               type: string
                       runtimeProfile:
                         type: string
-                  pipelineContext:
-                    type: object
-                    additionalProperties:
-                      type: string
                   services:
                     type: array
                     items:
@@ -276,6 +276,58 @@ spec:
                                 type: string
                             user:
                               type: string
+                        containerRun:
+                          type: object
+                          required:
+                          - image
+                          properties:
+                            envFromSecret:
+                              type: array
+                              items:
+                                type: object
+                                required:
+                                - objectName
+                                properties:
+                                  envName:
+                                    description: Name of environment variable
+                                    type: string
+                                  objectKey:
+                                    description: Key in config map or secret
+                                    type: string
+                                  objectName:
+                                    description: Name of config map or secret
+                                    type: string
+                            environment:
+                              type: array
+                              items:
+                                type: object
+                                required:
+                                - name
+                                properties:
+                                  fromSecret:
+                                    type: string
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                            files:
+                              type: array
+                              items:
+                                type: object
+                                required:
+                                - fromSecret
+                                - path
+                                properties:
+                                  fromSecret:
+                                    type: string
+                                  path:
+                                    type: string
+                            image:
+                              type: string
+                            imagePullSecret:
+                              type: string
+                            script:
+                              type: string
                         name:
                           type: string
                           pattern: ^[a-z]+[a-z\-_0-9]+$
@@ -346,58 +398,12 @@ spec:
                               pattern: ^[a-z]+[a-z\-_0-9]+$
                             script:
                               type: string
-                        simpleStep:
+                        waitForAccept:
                           type: object
-                          required:
-                          - image
                           properties:
-                            envFromSecret:
-                              type: array
-                              items:
-                                type: object
-                                required:
-                                - objectName
-                                properties:
-                                  envName:
-                                    description: Name of environment variable
-                                    type: string
-                                  objectKey:
-                                    description: Key in config map or secret
-                                    type: string
-                                  objectName:
-                                    description: Name of config map or secret
-                                    type: string
-                            environment:
-                              type: array
-                              items:
-                                type: object
-                                required:
-                                - name
-                                properties:
-                                  fromSecret:
-                                    type: string
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                            files:
-                              type: array
-                              items:
-                                type: object
-                                required:
-                                - fromSecret
-                                - path
-                                properties:
-                                  fromSecret:
-                                    type: string
-                                  path:
-                                    type: string
-                            image:
-                              type: string
-                            imagePullSecret:
-                              type: string
-                            script:
-                              type: string
+                            timeout:
+                              type: integer
+                              format: int32
                   workingDir:
                     type: string
               volumeMounts:
@@ -425,6 +431,8 @@ spec:
               currentStep:
                 type: integer
                 format: int32
+              currentStepType:
+                type: string
               duration:
                 type: integer
                 format: int32
