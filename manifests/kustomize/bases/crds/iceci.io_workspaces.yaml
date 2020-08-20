@@ -30,6 +30,11 @@ spec:
       jsonPath: .status.volume.subPath
       name: subpath
       type: string
+    - description: Age
+      format: date-time
+      jsonPath: .metadata.creationTimestamp
+      name: age
+      type: date
     name: v1alpha1
     schema:
       openAPIV3Schema:
@@ -50,14 +55,6 @@ spec:
             type: object
           spec:
             type: object
-            required:
-            - storageType
-            properties:
-              storageType:
-                type: string
-                enum:
-                - dynamic
-                - shared
           status:
             type: object
             properties:

@@ -15,16 +15,16 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - description: Age
-      format: date-time
-      jsonPath: .metadata.creationTimestamp
-      name: age
-      type: date
     - description: State
       format: byte
       jsonPath: .status.state
       name: state
       type: string
+    - description: Age
+      format: date-time
+      jsonPath: .metadata.creationTimestamp
+      name: age
+      type: date
     name: v1alpha1
     schema:
       openAPIV3Schema:
@@ -50,10 +50,10 @@ spec:
                 additionalProperties:
                   type: string
               imageBuilder:
-                type: string
-                enum:
-                - kaniko
-                - buildkit
+                type: object
+                properties:
+                  localCachePath:
+                    type: string
               labels:
                 type: object
                 additionalProperties:

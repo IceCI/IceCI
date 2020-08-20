@@ -9,3 +9,4 @@ resources:
 - iceci.io_gitpipelines.yaml
 - iceci.io_pipelines.yaml
 - iceci.io_runtimeprofiles.yaml
+- iceci.io_waits.yaml

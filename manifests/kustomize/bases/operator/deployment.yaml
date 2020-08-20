@@ -18,7 +18,7 @@ spec:
       serviceAccountName: iceci-manager
       containers:
       - name: iceci-operator
-        image: iceci/iceci-operator
+        image: iceci/iceci-operator:master
         imagePullPolicy: Always
         env:
         - name: ICECI_NAMESPACE

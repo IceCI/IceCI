@@ -15,16 +15,16 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - description: Age
-      format: date-time
-      jsonPath: .metadata.creationTimestamp
-      name: age
-      type: date
     - description: Phase
       format: byte
       jsonPath: .status.phase
       name: phase
       type: string
+    - description: Age
+      format: date-time
+      jsonPath: .metadata.creationTimestamp
+      name: age
+      type: date
     name: v1alpha1
     schema:
       openAPIV3Schema:
@@ -45,32 +45,49 @@ spec:
           spec:
             type: object
             required:
-            - git
+            - event
+            - repositoryURL
             properties:
+              auth:
+                type: object
+                required:
+                - secret
+                - type
+                properties:
+                  secret:
+                    type: string
+                  type:
+                    type: string
+                    enum:
+                    - token
+                    - ssh
               context:
                 type: object
                 additionalProperties:
                   type: string
-              git:
+              event:
                 type: object
                 required:
-                - repositoryURL
+                - name
+                - sha
+                - type
                 properties:
-                  auth:
-                    type: object
-                    required:
-                    - secret
-                    - type
-                    properties:
-                      secret:
-                        type: string
-                      type:
-                        type: string
-                  checkout:
+                  name:
+                    description: Name of pr or tag, and if type is commit, then name
+                      of branch
                     type: string
-                  repositoryURL:
+                  sha:
+                    description: SHA of object
                     type: string
+                  type:
+                    type: string
+                    enum:
+                    - commit
+                    - tag
+                    - pr
               pipelineFilePath:
+                type: string
+              repositoryURL:
                 type: string
           status:
             type: object
@@ -117,6 +134,8 @@ spec:
                 type: object
                 properties:
                   gitClone:
+                    type: string
+                  pipeline:
                     type: string
                   pipelineConfigMap:
                     type: string
